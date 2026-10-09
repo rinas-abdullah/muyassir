@@ -1,0 +1,30 @@
+[
+  {
+    "id": "cafe-01",
+    "act": "cafe",
+    "district": "العزيزية",
+    "lang": "ar",
+    "photos": { "facade": "photos/cafe-01-facade.jpg", "entrance": "photos/cafe-01-entrance.jpg" },
+    "expected": {
+      "SIGN-FIT": "fail",
+      "SIGN-AR": "pass",
+      "FAC-CLEAN": "pass",
+      "FAC-GLASS": "pass",
+      "ENT-ACCESS": "fail",
+      "ENT-CLEAR": "pass"
+    }
+  },
+  {
+    "id": "grocery-01",
+    "act": "grocery",
+    "lang": "ur",
+    "photos": { "facade": "photos/grocery-01-facade.jpg", "interior": "photos/grocery-01-interior.jpg" },
+    "expected": {
+      "SIGN-FIT": "pass",
+      "SIGN-AR": "pass",
+      "FAC-CLEAN": "fail",
+      "SAF-EXT": "pass",
+      "GRO-AISLE": "fail"
+    }
+  }
+]

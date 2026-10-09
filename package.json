@@ -1,0 +1,15 @@
+{
+  "name": "muyassir",
+  "version": "1.0.0",
+  "description": "مُيسّر — صوّر محلك واعرف جاهزيتك للترخيص قبل ما تقدّم",
+  "private": true,
+  "license": "UNLICENSED",
+  "engines": { "node": ">=18" },
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "demo": "MOCK=1 node server.js",
+    "test": "node --test tests/core.test.js tests/api.test.js",
+    "eval": "node eval/run-eval.js"
+  }
+}

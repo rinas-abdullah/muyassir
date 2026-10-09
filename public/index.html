@@ -570,13 +570,7 @@ tr:last-child td{border-bottom:0}
     </nav>
     <div class="hdr-tools">
       <label class="langbox" for="lang" title="لغة التقرير والمساعد"><i data-i="globe" data-s="17"></i><span class="sr">لغة التقرير والمساعد</span>
-        <select id="lang">
-          <option value="ar">العربية</option>
-          <option value="en">English</option>
-          <option value="ur">اردو</option>
-          <option value="id">Bahasa Indonesia</option>
-          <option value="bn">বাংলা</option>
-        </select>
+        <select id="lang"></select>
       </label>
       <a class="btn btn-primary hdr-cta" href="#check" data-go="check">ابدأ الفحص</a>
     </div>
@@ -710,6 +704,7 @@ tr:last-child td{border-bottom:0}
       <div class="faq">
         <details><summary>هل تقرير مُيسّر يغني عن معاينة البلدية؟</summary><p>لا. التقرير فحص مبدئي إرشادي يساعدك تجهز محلك قبل التقديم، والحكم النهائي للمفتش والجهة المختصة.</p></details>
         <details><summary>هل تُحفظ صور محلي؟</summary><p>لا. الصور تُستخدم للفحص فقط ثم تُحذف. لوحة الأمانة تحفظ نتيجة الفحص بدون صور ولا أسماء: النشاط والحي ونسبة الجاهزية ورموز البنود.</p></details>
+        <details><summary>وش اللغات المتاحة؟</summary><p>أكثر من 45 لغة في قائمة اللغة أعلى الصفحة، منها العربية والإنجليزية والأردو والهندية والبنغالية والإندونيسية والفلبينية والتركية والفرنسية. والمساعد يرد عليك بأي لغة تكتب أو تتكلم فيها.</p></details>
         <details><summary>أقدر أكلّم المساعد بصوتي؟</summary><p>إيه. في صفحة «اسأل مُيسّر» اضغط زر المايك وتكلّم، ويرد عليك المساعد مكتوب ومسموع. وتقدر تكتب سؤالك بدل الكلام.</p></details>
         <details><summary>وش أسوي إذا طلع بند «يحتاج مراجعة»؟</summary><p>يعني الصورة ما وضّحت البند بشكل كافٍ. صوّر الجزء المطلوب بوضوح وأعد الفحص، أو اسأل مُيسّر عن البند.</p></details>
         <details><summary>من وين تجي الاشتراطات؟</summary><p>في هذه النسخة التجريبية البنود نموذجية، وتُستبدل بدليل الاشتراطات الرسمي لكل نشاط قبل التشغيل الفعلي.</p></details>
@@ -940,12 +935,13 @@ tr:last-child td{border-bottom:0}
 document.documentElement.setAttribute("dir","rtl");
 document.documentElement.setAttribute("lang","ar");
 
-const {SLOTS, ACTS, ROADMAP, DISTRICTS, LANGS, NOPHOTO, NOPHOTO_FIX, W} = window.MUYASSIR_KB;
+const {SLOTS, ACTS, ROADMAP, DISTRICTS, LANGS, NOPHOTO, NOPHOTO_FIX, W, noPhoto, noPhotoFix} = window.MUYASSIR_KB;
+const KBdetect = window.MUYASSIR_KB.detectLang;
 const ST = {pass:{w:"مطابق",i:"check"}, fail:{w:"يحتاج تعديل",i:"alert"}, needs_review:{w:"يحتاج مراجعة",i:"help"}};
 const SEV = {high:"خطورة عالية", medium:"خطورة متوسطة", low:"خطورة منخفضة"};
 const ACT_ICON = {cafe:"coffee", grocery:"store", restaurant:"utensils", barber:"scissors"};
 const SLOT_ICON = {facade:"store", entrance:"door", interior:"layout", documents:"file"};
-const LNAME = {ar:"العربية",en:"English",ur:"اردو",id:"Bahasa Indonesia",bn:"বাংলা"};
+const LNAME = Object.fromEntries(Object.entries(LANGS).map(([k,v])=>[k,v.native]));
 
 /* ---------- helpers ---------- */
 const $ = (s,r=document)=>r.querySelector(s);
@@ -1017,6 +1013,7 @@ function newNo(){ const d=new Date(); const p=n=>String(n).padStart(2,"0"); retu
 
 /* ---------- language ---------- */
 const langSel = $("#lang");
+Object.entries(LANGS).forEach(([k,v])=>langSel.append(h("option",{value:k, text:v.native})));
 try{ const l = localStorage.getItem("muyassir.lang"); if(l && LANGS[l]) langSel.value = l; }catch(e){}
 function syncLang(){ $("#factLang").textContent = LNAME[langSel.value]; }
 langSel.addEventListener("change",()=>{ try{ localStorage.setItem("muyassir.lang", langSel.value); }catch(e){} syncLang(); });
@@ -1299,14 +1296,9 @@ $("#askform").addEventListener("submit", async ev=>{
     if(e && e.name!=="AbortError" && e.code!=="cancelled"){ errEl.textContent = ERR[e.code] || e.message || ERR.upstream_error; errEl.hidden=false; }
   }finally{ $("#send").disabled = false; }
 });
-$("#speakLast").addEventListener("click",()=>{ if(lastAnswer) speak(lastAnswer, detectLang(lastAnswer)); });
-function detectLang(t){
-  if(/[ঀ-৿]/.test(t)) return "bn";
-  if(/[ٹڈڑںھہے]/.test(t)) return "ur";
-  if(/[؀-ۿ]/.test(t)) return "ar";
-  if(/\b(dan|untuk|yang|anda|dengan)\b/i.test(t)) return "id";
-  return "en";
-}
+$("#speakLast").addEventListener("click",()=>{ if(lastAnswer) speak(lastAnswer, voiceFor(lastAnswer)); });
+function detectLang(t){ return KBdetect(t) || "en"; }
+
 
 /* ---------- municipality board ---------- */
 const bs = {checks:[], questions:[], loaded:false, err:"", demo:false, needPin:false, act:"all"};
@@ -1476,7 +1468,7 @@ function askRules(lang){
 Answer ONLY from this knowledge base (JSON):
 ${JSON.stringify(KBQ)}
 Rules:
-- Reply in the SAME language the user writes in (Arabic, English, Urdu, Indonesian or Bengali). If unsure, reply in ${LANGS[lang].name}.
+- Reply in the SAME language the user writes in, whatever language it is. If unsure, reply in ${LANGS[lang].name}.
 - Simple words, at most 7 short lines or a short numbered list. No markdown headings, no bold.
 - End with one line starting with the word for "Source" in the reply language, naming the source field of the facts you used.
 - If the answer is not in the knowledge base, say you don't have a confirmed answer and suggest calling 940 or checking the Balady platform. Never invent requirements, fees, sizes or durations.
@@ -1506,9 +1498,9 @@ function initClaude(){
     const out = await backend.sample.json(checkPrompt(a, sent, checkItems, district, area, lang), {images: sent.map(s=>wz.photos[s.id].file), signal});
     const got = new Map((out && Array.isArray(out.results) ? out.results : []).map(x=>[String(x.code), x]));
     const results = a.items.map(i=>{
-      if(!ids.includes(i.slot)) return {...i, status:"needs_review", observation:NOPHOTO[lang], fix:NOPHOTO_FIX[lang]};
+      if(!ids.includes(i.slot)) return {...i, status:"needs_review", observation:noPhoto(lang), fix:noPhotoFix(lang)};
       const x = got.get(i.code);
-      if(!x) return {...i, status:"needs_review", observation:"", fix:NOPHOTO_FIX[lang]};
+      if(!x) return {...i, status:"needs_review", observation:"", fix:noPhotoFix(lang)};
       let st = ["pass","fail","needs_review"].includes(x.status) ? x.status : "needs_review";
       if(typeof x.confidence==="number" && x.confidence<0.6) st = "needs_review";
       return {...i, status:st, observation:String(x.observation||""), fix:String(x.fix||"")};
@@ -1531,7 +1523,7 @@ async function initServer(){
     const photos = await Promise.all(sent.map(async s=>({slot:s.id, ...(await toJpeg(wz.photos[s.id].file))})));
     const out = await api("/api/analyze", {act, district, area, lang, photos}, signal);
     const byCode = new Map((out.results||[]).map(x=>[x.code, x]));
-    const results = ACTS[act].items.map(i=>{ const x=byCode.get(i.code); return x ? {...i, status:x.status, observation:x.observation||"", fix:x.fix||""} : {...i, status:"needs_review", observation:"", fix:NOPHOTO_FIX[lang]}; });
+    const results = ACTS[act].items.map(i=>{ const x=byCode.get(i.code); return x ? {...i, status:x.status, observation:x.observation||"", fix:x.fix||""} : {...i, status:"needs_review", observation:"", fix:noPhotoFix(lang)}; });
     return {results, score: typeof out.score==="number" ? out.score : scoreOf(results), summary:out.summary||"", mock:!!out.mock};
   };
   backend.ask = async (messages, lang, signal)=>(await api("/api/ask", {lang, messages}, signal)).text;
@@ -1555,7 +1547,7 @@ $$("#rate [data-r]").forEach(b=>b.addEventListener("click",()=>{ $("#rate .btns"
 
 /* ---------- voice: talk to the assistant and hear the answer ---------- */
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-const REC_LANG = {ar:"ar-SA", en:"en-US", ur:"ur-PK", id:"id-ID", bn:"bn-BD"};
+
 let rec = null, listening = false;
 function stopListening(){ listening = false; $("#mic").setAttribute("aria-pressed","false"); $("#listenHint").hidden = true; }
 $("#mic").addEventListener("click", ()=>{
@@ -1563,7 +1555,7 @@ $("#mic").addEventListener("click", ()=>{
   if(listening){ rec && rec.stop(); return; }
   if(!SR){ errEl.textContent = "متصفحك ما يدعم التحدث. جرّب Chrome أو Safari أو Edge، أو اكتب سؤالك."; errEl.hidden = false; return; }
   try{ speechSynthesis.cancel(); }catch(e){}
-  rec = new SR(); rec.lang = REC_LANG[langSel.value] || "ar-SA"; rec.interimResults = true; rec.maxAlternatives = 1;
+  rec = new SR(); rec.lang = (LANGS[langSel.value]||LANGS.ar).v; rec.interimResults = true; rec.maxAlternatives = 1;
   let finalText = "";
   rec.onresult = ev=>{ let t=""; for(const r of ev.results){ t += r[0].transcript; if(r.isFinal) finalText = t; } $("#q").value = t; };
   rec.onerror = ev=>{ stopListening(); if(ev.error==="not-allowed"||ev.error==="service-not-allowed"){ errEl.textContent="اسمح للموقع باستخدام المايك من إعدادات المتصفح، أو اكتب سؤالك."; errEl.hidden=false; } else if(ev.error!=="aborted" && ev.error!=="no-speech"){ errEl.textContent="ما قدرنا نسمعك. جرّب مرة ثانية أو اكتب سؤالك."; errEl.hidden=false; } };
@@ -1571,7 +1563,8 @@ $("#mic").addEventListener("click", ()=>{
   listening = true; $("#mic").setAttribute("aria-pressed","true"); $("#listenHint").hidden = false;
   try{ rec.start(); }catch(e){ stopListening(); }
 });
-function speakReply(text){ if($("#voiceReply").checked && "speechSynthesis" in window) speak(text.replace(/\n+/g," "), detectLang(text)); }
+function voiceFor(text){ const d = KBdetect(text); return (!d || (d==="en" && langSel.value!=="ar")) ? langSel.value : d; }
+function speakReply(text){ if($("#voiceReply").checked && "speechSynthesis" in window) speak(text.replace(/\n+/g," "), voiceFor(text)); }
 /* floating bot button: hidden on the assistant page */
 function syncFab(){ const f=$("#fab"); if(f) f.hidden = current==="ask"; }
 

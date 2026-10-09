@@ -525,6 +525,22 @@ tr:last-child td{border-bottom:0}
 .ap-tabs{display:grid;grid-template-columns:repeat(4,1fr);background:rgba(255,255,255,.96);border-top:1px solid #E6ECEA;padding:7px 0 4px}
 .ap-tabs span{display:grid;justify-items:center;gap:2px;font-size:10px;color:#8A9895;font-weight:500}
 .ap-tabs span.on{color:var(--brand);font-weight:700}
+
+/* ===== voice assistant ===== */
+.composer{grid-template-columns:minmax(0,1fr) auto auto}
+.mic{width:48px;padding-inline:0}
+.mic[aria-pressed="true"]{background:var(--bad);border-color:var(--bad);color:#FFFFFF;animation:pulse 1.2s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(180,56,42,.45)}50%{box-shadow:0 0 0 10px rgba(180,56,42,0)}}
+@media (prefers-reduced-motion:reduce){.mic[aria-pressed="true"]{animation:none}}
+.chat-tools{align-items:center}
+.voice-tg{display:inline-flex;align-items:center;gap:6px;font-size:14px;color:var(--muted);cursor:pointer}
+.voice-tg input{accent-color:var(--brand);width:16px;height:16px}
+.listen{display:inline-flex;align-items:center;gap:8px;font-size:14px;color:var(--bad);font-weight:600}
+.listen .dots{width:10px;height:10px;border-radius:50%;background:var(--bad);animation:pulse 1.2s ease-in-out infinite}
+.fab{position:fixed;z-index:25;bottom:calc(24px + env(safe-area-inset-bottom,0px));inset-inline-end:24px;display:flex;align-items:center;gap:10px;background:var(--brand);color:#FFFFFF;text-decoration:none;border-radius:999px;padding:8px 18px 8px 8px;box-shadow:0 10px 26px rgba(19,85,71,.35);font-weight:700}
+.fab-ic{display:grid;place-items:center;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.16)}
+.fab:hover{background:var(--brand-ink)}
+@media (max-width:960px){.fab{bottom:calc(80px + env(safe-area-inset-bottom,0px));inset-inline-end:16px;padding:6px}.fab-t{display:none}}
 </style>
 
 <div dir="rtl" lang="ar">
@@ -569,7 +585,7 @@ tr:last-child td{border-bottom:0}
           <a class="btn btn-outline btn-lg" href="#check" data-go="check" data-example="1">شاهد مثال تقرير</a>
         </div>
         <div class="trust">
-          <span><i data-i="globe" data-s="17"></i>5 لغات</span>
+          <span><i data-i="mic" data-s="17"></i>مساعد بالصوت والكتابة</span>
           <span><i data-i="clock" data-s="17"></i>النتيجة خلال دقيقة تقريباً</span>
           <span><i data-i="lock" data-s="17"></i>لا نحفظ صور محلك</span>
         </div>
@@ -624,7 +640,7 @@ tr:last-child td{border-bottom:0}
 
   <div class="kstrip"><div class="wrap"><ul>
     <li><span class="ki"><i data-i="cash" data-s="20"></i></span><span><b>مجانية</b><small>بدون رسوم أو تسجيل</small></span></li>
-    <li><span class="ki"><i data-i="globe" data-s="20"></i></span><span><b>5 لغات</b><small>للتقرير والمساعد</small></span></li>
+    <li><span class="ki"><i data-i="mic" data-s="20"></i></span><span><b>مساعد صوتي</b><small>تكلّمه أو اكتب له</small></span></li>
     <li><span class="ki"><i data-i="store" data-s="20"></i></span><span><b id="nActs">4 أنشطة</b><small>مقهى، بقالة، مطعم، حلاقة</small></span></li>
     <li><span class="ki"><i data-i="list" data-s="20"></i></span><span><b id="nItems">بنود فحص</b><small>لكل نشاط قائمة بنود خاصة</small></span></li>
   </ul></div></div>
@@ -644,8 +660,8 @@ tr:last-child td{border-bottom:0}
           <span class="svc-ico"><i data-i="chat" data-s="24"></i></span>
           <span class="svc-tag">لأصحاب المحلات</span>
           <h3>اسأل مُيسّر</h3>
-          <p>مساعد يجيب عن اشتراطات نشاطك بالعربية والإنجليزية والأردو والإندونيسية والبنغالية، ويذكر المصدر.</p>
-          <div class="svc-meta"><span><i data-i="globe" data-s="15"></i>5 لغات</span><span><i data-i="cash" data-s="15"></i>مجانية</span></div><span class="btn btn-primary btn-sm start">ابدأ الخدمة</span>
+          <p>مساعد تكلّمه بصوتك أو تكتب له، ويرد عليك بالصوت والكتابة عن اشتراطات نشاطك مع ذكر المصدر.</p>
+          <div class="svc-meta"><span><i data-i="mic" data-s="15"></i>صوت وكتابة</span><span><i data-i="cash" data-s="15"></i>مجانية</span></div><span class="btn btn-primary btn-sm start">ابدأ الخدمة</span>
         </a>
         <a class="card svc-card" href="#board" data-go="board">
           <span class="svc-ico"><i data-i="building" data-s="24"></i></span>
@@ -683,7 +699,7 @@ tr:last-child td{border-bottom:0}
       <div class="faq">
         <details><summary>هل تقرير مُيسّر يغني عن معاينة البلدية؟</summary><p>لا. التقرير فحص مبدئي إرشادي يساعدك تجهز محلك قبل التقديم، والحكم النهائي للمفتش والجهة المختصة.</p></details>
         <details><summary>هل تُحفظ صور محلي؟</summary><p>لا. الصور تُستخدم للفحص فقط ثم تُحذف. لوحة الأمانة تحفظ نتيجة الفحص بدون صور ولا أسماء: النشاط والحي ونسبة الجاهزية ورموز البنود.</p></details>
-        <details><summary>وش اللغات المتاحة؟</summary><p>العربية والإنجليزية والأردو والإندونيسية والبنغالية. اختر اللغة من أعلى الصفحة، ويطلع التقرير وإجابات المساعد بها.</p></details>
+        <details><summary>أقدر أكلّم المساعد بصوتي؟</summary><p>إيه. في صفحة «اسأل مُيسّر» اضغط زر المايك وتكلّم، ويرد عليك المساعد مكتوب ومسموع. وتقدر تكتب سؤالك بدل الكلام.</p></details>
         <details><summary>وش أسوي إذا طلع بند «يحتاج مراجعة»؟</summary><p>يعني الصورة ما وضّحت البند بشكل كافٍ. صوّر الجزء المطلوب بوضوح وأعد الفحص، أو اسأل مُيسّر عن البند.</p></details>
         <details><summary>من وين تجي الاشتراطات؟</summary><p>في هذه النسخة التجريبية البنود نموذجية، وتُستبدل بدليل الاشتراطات الرسمي لكل نشاط قبل التشغيل الفعلي.</p></details>
       </div>
@@ -815,7 +831,7 @@ tr:last-child td{border-bottom:0}
     <div class="wrap">
       <nav class="crumbs" aria-label="مسار الصفحة"><a href="#home" data-go="home">الرئيسية</a><span aria-hidden="true">/</span><span>الخدمات</span><span aria-hidden="true">/</span><span>اسأل مُيسّر</span></nav>
       <h1>اسأل مُيسّر</h1>
-      <p>اسأل عن متطلبات نشاطك واشتراطات الواجهة والمدخل بلغتك، ويجيبك من قاعدة الاشتراطات مع ذكر المصدر.</p>
+      <p>تكلّم أو اكتب سؤالك عن متطلبات نشاطك، ويرد عليك مُيسّر بالصوت والكتابة من قاعدة الاشتراطات مع ذكر المصدر.</p>
     </div>
   </div>
   <main class="main">
@@ -824,7 +840,7 @@ tr:last-child td{border-bottom:0}
         <section class="card chatbox" aria-label="المحادثة">
           <div class="chat-head">
             <span class="avatar"><img class="lg" src="__LOGO__" width="26" height="26" alt=""></span>
-            <div><b>مساعد مُيسّر</b><small>يجيب بخمس لغات</small></div>
+            <div><b>مساعد مُيسّر</b><small>يرد بالصوت والكتابة</small></div>
             <button class="btn btn-outline btn-sm" id="clearChat" type="button"><i data-i="refresh" data-s="16"></i>محادثة جديدة</button>
           </div>
           <div class="chat" id="chat" aria-live="polite"></div>
@@ -832,24 +848,22 @@ tr:last-child td{border-bottom:0}
             <div class="sugg" id="sugg"></div>
             <form class="composer" id="askform">
               <label for="q" class="sr">سؤالك</label>
-              <textarea class="input" id="q" dir="auto" rows="1" placeholder="اكتب سؤالك… مثلاً: وش أحتاج عشان أفتح بقالة؟"></textarea>
+              <textarea class="input" id="q" dir="auto" rows="1" placeholder="اكتب سؤالك أو اضغط المايك وتكلّم…"></textarea>
+              <button class="btn btn-outline mic" id="mic" type="button" aria-pressed="false" aria-label="تكلّم"><i data-i="mic" data-s="19"></i></button>
               <button class="btn btn-primary" id="send" type="submit"><i data-i="send" data-s="18"></i><span class="sr">أرسل</span></button>
             </form>
-            <div class="chat-tools"><button class="btn btn-text btn-sm" id="speakLast" type="button" hidden><i data-i="volume" data-s="16"></i>استمع لآخر إجابة</button></div>
+            <div class="chat-tools"><label class="voice-tg"><input type="checkbox" id="voiceReply" checked> الرد بالصوت</label><span class="listen" id="listenHint" hidden><span class="dots"></span>أسمعك… تكلّم الحين</span><button class="btn btn-text btn-sm" id="speakLast" type="button" hidden><i data-i="volume" data-s="16"></i>استمع لآخر إجابة</button></div>
             <p class="err" id="askerr" hidden></p>
           </div>
         </section>
         <aside class="aside">
           <div class="card card-pad">
-            <h3><i data-i="globe" data-s="18"></i>اللغات المدعومة</h3>
-            <ul class="langs-list">
-              <li><span>العربية</span><span>Arabic</span></li>
-              <li><span>English</span><span>الإنجليزية</span></li>
-              <li><span>اردو</span><span>الأردو</span></li>
-              <li><span>Bahasa Indonesia</span><span>الإندونيسية</span></li>
-              <li><span>বাংলা</span><span>البنغالية</span></li>
+            <h3><i data-i="mic" data-s="18"></i>كيف تكلّم مُيسّر</h3>
+            <ul class="tips">
+              <li><i data-i="mic" data-s="16"></i>اضغط زر المايك وتكلّم بسؤالك.</li>
+              <li><i data-i="chat" data-s="16"></i>أو اكتب سؤالك في المربع.</li>
+              <li><i data-i="volume" data-s="16"></i>يوصلك الرد مكتوب ومسموع، وتقدر توقف الصوت من «الرد بالصوت».</li>
             </ul>
-            <p class="note">اكتب بأي لغة منها، ويرد عليك المساعد بنفس اللغة.</p>
           </div>
           <div class="card card-pad">
             <h3><i data-i="phone" data-s="18"></i>تحتاج مساعدة أكثر؟</h3>
@@ -898,6 +912,8 @@ tr:last-child td{border-bottom:0}
   </div>
 </footer>
 
+<a class="fab" href="#ask" data-go="ask" id="fab" aria-label="اسأل مُيسّر بالصوت أو الكتابة"><span class="fab-ic"><i data-i="mic" data-s="22"></i></span><span class="fab-t">اسأل مُيسّر</span></a>
+
 <nav class="bnav" aria-label="التنقل">
   <a href="#home" data-go="home"><i data-i="home" data-s="22"></i>الرئيسية</a>
   <a href="#check" data-go="check"><i data-i="scan" data-s="22"></i>الفحص</a>
@@ -937,6 +953,7 @@ const ICONS = {
   home:'<path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/>',
   scan:'<path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="12" r="3"/><path d="m16 16-1.9-1.9"/>',
   chat:'<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>',
+  mic:'<rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10v1a7 7 0 0 0 14 0v-1"/><path d="M12 18v4"/><path d="M8 22h8"/>',
   chart:'<path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/>',
   globe:'<circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/>',
   shield:'<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/>',
@@ -1006,6 +1023,7 @@ function go(v, opts){
   try{ history.replaceState(null, "", "#"+v); }catch(e){}
   if(!opts.keepScroll) window.scrollTo({top:0, behavior:"auto"});
   if(v==="board") boardOpened();
+  syncFab();
 }
 document.addEventListener("click", e=>{
   const a = e.target.closest("[data-go]"); if(!a) return;
@@ -1263,7 +1281,7 @@ $("#askform").addEventListener("submit", async ev=>{
   try{
     const text = await backend.ask(turns.slice(-8), langSel.value, askCtl.signal, t=>{ out.m.classList.remove("think"); out.b.textContent=t; $("#chat").scrollTop=$("#chat").scrollHeight; });
     out.m.classList.remove("think"); out.b.textContent = text;
-    turns.push({role:"assistant", content:text}); lastAnswer = text;
+    turns.push({role:"assistant", content:text}); lastAnswer = text; speakReply(text);
     $("#speakLast").hidden = !("speechSynthesis" in window);
   }catch(e){
     out.m.remove(); turns.pop();
@@ -1523,9 +1541,33 @@ $$("#rate [data-r]").forEach(b=>b.addEventListener("click",()=>{ $("#rate .btns"
 /* ---------- key facts ---------- */
 (function(){ const codes = new Set(); Object.values(ACTS).forEach(a=>a.items.forEach(i=>codes.add(i.code))); $("#nItems").textContent = codes.size+" بند فحص"; $("#nActs").textContent = Object.keys(ACTS).length+" أنشطة"; })();
 
+
+/* ---------- voice: talk to the assistant and hear the answer ---------- */
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+const REC_LANG = {ar:"ar-SA", en:"en-US", ur:"ur-PK", id:"id-ID", bn:"bn-BD"};
+let rec = null, listening = false;
+function stopListening(){ listening = false; $("#mic").setAttribute("aria-pressed","false"); $("#listenHint").hidden = true; }
+$("#mic").addEventListener("click", ()=>{
+  const errEl = $("#askerr"); errEl.hidden = true;
+  if(listening){ rec && rec.stop(); return; }
+  if(!SR){ errEl.textContent = "متصفحك ما يدعم التحدث. جرّب Chrome أو Safari أو Edge، أو اكتب سؤالك."; errEl.hidden = false; return; }
+  try{ speechSynthesis.cancel(); }catch(e){}
+  rec = new SR(); rec.lang = REC_LANG[langSel.value] || "ar-SA"; rec.interimResults = true; rec.maxAlternatives = 1;
+  let finalText = "";
+  rec.onresult = ev=>{ let t=""; for(const r of ev.results){ t += r[0].transcript; if(r.isFinal) finalText = t; } $("#q").value = t; };
+  rec.onerror = ev=>{ stopListening(); if(ev.error==="not-allowed"||ev.error==="service-not-allowed"){ errEl.textContent="اسمح للموقع باستخدام المايك من إعدادات المتصفح، أو اكتب سؤالك."; errEl.hidden=false; } else if(ev.error!=="aborted" && ev.error!=="no-speech"){ errEl.textContent="ما قدرنا نسمعك. جرّب مرة ثانية أو اكتب سؤالك."; errEl.hidden=false; } };
+  rec.onend = ()=>{ const t = ($("#q").value||"").trim(); stopListening(); if(t){ $("#voiceReply").checked = true; $("#askform").requestSubmit(); } };
+  listening = true; $("#mic").setAttribute("aria-pressed","true"); $("#listenHint").hidden = false;
+  try{ rec.start(); }catch(e){ stopListening(); }
+});
+function speakReply(text){ if($("#voiceReply").checked && "speechSynthesis" in window) speak(text.replace(/\n+/g," "), detectLang(text)); }
+/* floating bot button: hidden on the assistant page */
+function syncFab(){ const f=$("#fab"); if(f) f.hidden = current==="ask"; }
+
 /* start */
 window.addEventListener("hashchange",()=>{ const v=(location.hash||"").slice(1); if(VIEWS.includes(v) && v!==current) go(v); });
 setStep(1);
 go((location.hash||"").slice(1) || "home", {keepScroll:true});
+syncFab();
 })();
 </script>

@@ -866,7 +866,8 @@ tr:last-child td{border-bottom:0}
               <button class="btn btn-outline mic" id="mic" type="button" aria-pressed="false" aria-label="تكلّم"><i data-i="mic" data-s="19"></i></button>
               <button class="btn btn-primary" id="send" type="submit"><i data-i="send" data-s="18"></i><span class="sr">أرسل</span></button>
             </form>
-            <div class="chat-tools"><label class="voice-tg"><input type="checkbox" id="voiceReply" checked> الرد بالصوت</label><span class="listen" id="listenHint" hidden><span class="dots"></span>أسمعك… تكلّم الحين</span><button class="btn btn-text btn-sm" id="speakLast" type="button" hidden><i data-i="volume" data-s="16"></i>استمع لآخر إجابة</button></div>
+            <div class="chat-tools"><label class="voice-tg"><input type="checkbox" id="voiceReply" checked> الرد بالصوت</label><span class="listen" id="listenHint" hidden><span class="dots"></span>أسمعك… تكلّم الحين</span><button class="btn btn-text btn-sm" id="speakLast" type="button" hidden><i data-i="volume" data-s="16"></i>استمع لآخر إجابة</button><button class="btn btn-outline btn-sm" id="stopVoice" type="button" hidden><i data-i="x" data-s="15"></i>إيقاف الصوت</button></div>
+            <p class="note" id="voiceHint" hidden></p>
             <p class="err" id="askerr" hidden></p>
           </div>
         </section>
@@ -983,6 +984,7 @@ const ICONS = {
   home:'<path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/>',
   scan:'<path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="12" r="3"/><path d="m16 16-1.9-1.9"/>',
   chat:'<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>',
+  x:'<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
   mic:'<rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10v1a7 7 0 0 0 14 0v-1"/><path d="M12 18v4"/><path d="M8 22h8"/>',
   chart:'<path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/>',
   globe:'<circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/>',
@@ -1253,7 +1255,7 @@ function renderReport(r){
   } else {
     acts.append(h("button",{class:"btn btn-primary", type:"button", onclick:()=>{ resetWizard(); window.scrollTo({top:0}); }}, ico("scan",18), "ابدأ فحص محلك"));
   }
-  if("speechSynthesis" in window) acts.append(h("button",{class:"btn btn-outline", type:"button", onclick:()=>speak(spokenSummary(r), r.lang)}, ico("volume",18), "استمع للتقرير"));
+  if("speechSynthesis" in window) acts.append(h("button",{class:"btn btn-outline", type:"button", onclick:()=>{ unlockTTS(); speak(spokenSummary(r), r.lang); }}, ico("volume",18), "استمع للتقرير"));
   const cp = h("button",{class:"btn btn-outline", type:"button"}, ico("copy",18), h("span",{text:"انسخ التقرير"}));
   cp.addEventListener("click", async ()=>{ const s=cp.querySelector("span"); try{ await navigator.clipboard.writeText(textReport(r)); s.textContent="تم النسخ"; }catch(e){ s.textContent="تعذّر النسخ"; } setTimeout(()=>s.textContent="انسخ التقرير",1800); });
   acts.append(cp);
@@ -1274,9 +1276,48 @@ function textReport(r){
   r.results.forEach(x=>{ t += "\n["+ST[x.status].w+"] "+x.t+"\n"+(x.observation||"")+(x.fix && x.status!=="pass" ? "\nالحل: "+x.fix : "")+"\n"; });
   return t + "\nالنتيجة إرشادية، والحكم النهائي للجهة المختصة.";
 }
-function speak(text, lang){
-  try{ speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(text); u.lang=(LANGS[lang]||LANGS.ar).v;
-    const v=speechSynthesis.getVoices().find(v=>v.lang && v.lang.toLowerCase().startsWith(u.lang.slice(0,2))); if(v) u.voice=v; speechSynthesis.speak(u); }catch(e){}
+/* ---------- text to speech (robust across Chrome, Edge, Safari, iOS, Android) ---------- */
+const TTS = "speechSynthesis" in window;
+let voicesP = null, ttsUnlocked = false, speakingNow = false;
+function loadVoices(){
+  if(!TTS) return Promise.resolve([]);
+  const v = speechSynthesis.getVoices(); if(v.length) return Promise.resolve(v);
+  if(!voicesP) voicesP = new Promise(res=>{ const done=()=>res(speechSynthesis.getVoices()); try{ speechSynthesis.addEventListener("voiceschanged", done, {once:true}); }catch(e){} setTimeout(done, 1500); });
+  return voicesP;
+}
+if(TTS) loadVoices();
+function pickVoice(voices, tag){
+  const norm = x=>String(x||"").toLowerCase().replace("_","-"), base = tag.slice(0,2).toLowerCase();
+  const c = voices.filter(v=>norm(v.lang).startsWith(base)); if(!c.length) return null;
+  const score = v=>(/natural|neural|online|premium|enhanced|google|siri|majed|maged|tarik|laila|hamed|zariyah|salma/i.test(v.name)?2:0)+(norm(v.lang)===tag.toLowerCase()?1:0);
+  return c.sort((a,b)=>score(b)-score(a))[0];
+}
+function cleanForSpeech(t){ return String(t||"").replace(/https?:\/\/\S+/g,"").replace(/[*_#`>|~]/g," ").replace(/\s*\n+\s*/g,". ").replace(/\s{2,}/g," ").trim(); }
+function speechChunks(t){
+  const parts = t.match(/[^.!?؟。\n،,;]+[.!?؟。،,;]?/g) || [t];
+  return parts.map(x=>x.trim()).filter(Boolean).reduce((a,x)=>{ if(a.length && (a[a.length-1]+" "+x).length < 160) a[a.length-1] += " "+x; else a.push(x); return a; }, []);
+}
+function setSpeaking(on){ speakingNow = on; const b=$("#stopVoice"); if(b) b.hidden = !on; }
+/* iOS and some Android browsers only allow speech that starts from a tap: call this inside click handlers */
+function unlockTTS(){ if(!TTS || ttsUnlocked) return; try{ const u=new SpeechSynthesisUtterance(" "); u.volume=0; speechSynthesis.speak(u); ttsUnlocked=true; }catch(e){} }
+function stopSpeaking(){ if(TTS){ try{ speechSynthesis.cancel(); }catch(e){} } setSpeaking(false); }
+async function speak(text, lang){
+  if(!TTS) return false;
+  const tag = (LANGS[lang]||LANGS.ar).v;
+  const voice = pickVoice(await loadVoices(), tag);
+  try{ speechSynthesis.cancel(); }catch(e){}
+  await new Promise(r=>setTimeout(r, 80));
+  const parts = speechChunks(cleanForSpeech(text)); if(!parts.length) return false;
+  setSpeaking(true);
+  parts.forEach((p,i)=>{
+    const u = new SpeechSynthesisUtterance(p); u.lang = tag; if(voice) u.voice = voice; u.rate = 0.97;
+    if(i===parts.length-1){ u.onend = ()=>setSpeaking(false); u.onerror = ()=>setSpeaking(false); }
+    speechSynthesis.speak(u);
+  });
+  try{ speechSynthesis.resume(); }catch(e){}
+  const hint = $("#voiceHint");
+  if(hint){ hint.hidden = !!voice; if(!voice) hint.textContent = "جهازك ما فيه صوت للغة "+(LNAME[lang]||"")+"، فممكن يطلع الصوت بنطق غير واضح. تقدر تقرأ الرد المكتوب."; }
+  return true;
 }
 
 /* ---------- run a check ---------- */
@@ -1338,10 +1379,11 @@ function bubble(who, text){
 let turns = [], askCtl = null, lastAnswer = null;
 function greet(){ $("#chat").innerHTML=""; bubble("a","أهلاً، أنا مُيسّر. اسألني عن متطلبات فتح نشاطك أو اشتراطات الواجهة والمدخل، وبأي لغة تريحك."); }
 greet();
-$("#clearChat").addEventListener("click",()=>{ askCtl && askCtl.abort(); turns=[]; lastAnswer=null; $("#speakLast").hidden=true; greet(); });
+$("#clearChat").addEventListener("click",()=>{ stopSpeaking(); askCtl && askCtl.abort(); turns=[]; lastAnswer=null; $("#speakLast").hidden=true; greet(); });
 $("#q").addEventListener("keydown", e=>{ if(e.key==="Enter" && !e.shiftKey && !e.isComposing){ e.preventDefault(); $("#askform").requestSubmit(); } });
 $("#askform").addEventListener("submit", async ev=>{
   ev.preventDefault();
+  if($("#voiceReply").checked) unlockTTS();
   const q = $("#q").value.trim(); if(!q) return;
   const errEl = $("#askerr"); errEl.hidden = true;
   if(!backend.ready){ errEl.textContent = backend.msg || ERR.network; errEl.hidden=false; return; }
@@ -1358,7 +1400,7 @@ $("#askform").addEventListener("submit", async ev=>{
     if(e && e.name!=="AbortError" && e.code!=="cancelled"){ errEl.textContent = ERR[e.code] || e.message || ERR.upstream_error; errEl.hidden=false; }
   }finally{ $("#send").disabled = false; }
 });
-$("#speakLast").addEventListener("click",()=>{ if(lastAnswer) speak(lastAnswer, voiceFor(lastAnswer)); });
+$("#speakLast").addEventListener("click",()=>{ unlockTTS(); if(lastAnswer) speak(lastAnswer, voiceFor(lastAnswer)); });
 function detectLang(t){ return KBdetect(t) || "en"; }
 
 
@@ -1613,20 +1655,22 @@ const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 let rec = null, listening = false;
 function stopListening(){ listening = false; $("#mic").setAttribute("aria-pressed","false"); $("#listenHint").hidden = true; }
 $("#mic").addEventListener("click", ()=>{
+  unlockTTS();
   const errEl = $("#askerr"); errEl.hidden = true;
   if(listening){ rec && rec.stop(); return; }
   if(!SR){ errEl.textContent = "متصفحك ما يدعم التحدث. جرّب Chrome أو Safari أو Edge، أو اكتب سؤالك."; errEl.hidden = false; return; }
-  try{ speechSynthesis.cancel(); }catch(e){}
+  stopSpeaking();
   rec = new SR(); rec.lang = (LANGS[langSel.value]||LANGS.ar).v; rec.interimResults = true; rec.maxAlternatives = 1;
-  let finalText = "";
-  rec.onresult = ev=>{ let t=""; for(const r of ev.results){ t += r[0].transcript; if(r.isFinal) finalText = t; } $("#q").value = t; };
-  rec.onerror = ev=>{ stopListening(); if(ev.error==="not-allowed"||ev.error==="service-not-allowed"){ errEl.textContent="اسمح للموقع باستخدام المايك من إعدادات المتصفح، أو اكتب سؤالك."; errEl.hidden=false; } else if(ev.error!=="aborted" && ev.error!=="no-speech"){ errEl.textContent="ما قدرنا نسمعك. جرّب مرة ثانية أو اكتب سؤالك."; errEl.hidden=false; } };
+  rec.onresult = ev=>{ let t=""; for(let i=0;i<ev.results.length;i++){ t += ev.results[i][0].transcript; } $("#q").value = t; };
+  rec.onerror = ev=>{ stopListening(); if(ev.error==="not-allowed"||ev.error==="service-not-allowed"){ errEl.textContent="اسمح للموقع باستخدام المايك من إعدادات المتصفح، أو اكتب سؤالك."; errEl.hidden=false; } else if(ev.error==="no-speech"){ errEl.textContent="ما سمعنا صوت. قرّب الجوال وتكلّم بعد ما يصير الزر أحمر."; errEl.hidden=false; } else if(ev.error!=="aborted"){ errEl.textContent="ما قدرنا نسمعك. جرّب مرة ثانية أو اكتب سؤالك."; errEl.hidden=false; } };
   rec.onend = ()=>{ const t = ($("#q").value||"").trim(); stopListening(); if(t){ $("#voiceReply").checked = true; $("#askform").requestSubmit(); } };
   listening = true; $("#mic").setAttribute("aria-pressed","true"); $("#listenHint").hidden = false;
   try{ rec.start(); }catch(e){ stopListening(); }
 });
 function voiceFor(text){ const d = KBdetect(text); return (!d || (d==="en" && langSel.value!=="ar")) ? langSel.value : d; }
-function speakReply(text){ if($("#voiceReply").checked && "speechSynthesis" in window) speak(text.replace(/\n+/g," "), voiceFor(text)); }
+$("#stopVoice").addEventListener("click", stopSpeaking);
+$("#voiceReply").addEventListener("change", e=>{ if(!e.target.checked) stopSpeaking(); });
+function speakReply(text){ if($("#voiceReply").checked && TTS) speak(text, voiceFor(text)); }
 /* floating bot button: hidden on the assistant page */
 function syncFab(){ const f=$("#fab"); if(f) f.hidden = current==="ask"; }
 

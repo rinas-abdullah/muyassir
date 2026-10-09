@@ -124,14 +124,14 @@ button{cursor:pointer}
 .device .hw.vu{left:-3px;top:162px;height:56px}
 .device .hw.vd{left:-3px;top:230px;height:56px}
 .device .hw.pw{right:-3px;top:190px;height:88px}
-.screen{position:relative;background:var(--bg);border-radius:44px;overflow:hidden;display:grid;grid-template-rows:auto 1fr;height:620px;padding-bottom:24px;background:#FFFFFF}
+.screen{position:relative;background:var(--bg);border-radius:44px;overflow:hidden;display:grid;grid-template-rows:auto 1fr;height:650px;padding-bottom:24px;background:#FFFFFF}
 .island{position:absolute;top:11px;left:50%;transform:translateX(-50%);width:98px;height:29px;border-radius:20px;background:#000;z-index:3}
 .island::after{content:"";position:absolute;top:9px;inset-inline-end:14px;width:11px;height:11px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#3A4A6A,#0B0F18 70%)}
 .sbar{display:flex;justify-content:space-between;align-items:center;height:50px;padding:6px 30px 0;background:var(--surface);font-size:15px;font-weight:600;color:#111;font-family:-apple-system,"SF Pro Text","Helvetica Neue",Arial,sans-serif;direction:ltr}
 .sbar .ic{display:flex;gap:6px;align-items:center}
 .home-ind{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:118px;height:5px;border-radius:3px;background:#111;z-index:3}
 .scr-body{overflow:hidden}
-.shot{display:block;width:100%;height:100%;object-fit:cover;object-position:top;min-height:0}
+
 .scr-bar{background:var(--surface);padding:14px 16px 12px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);font-size:13px}
 .scr-bar b{font-size:14px}
 .scr-body{padding:14px;display:grid;gap:10px}
@@ -488,6 +488,43 @@ tr:last-child td{border-bottom:0}
 .rate-box .thanks{color:var(--ok);font-weight:600;display:inline-flex;align-items:center;gap:8px}
 .footer{margin-top:48px}
 .f-bottom .copy{display:flex;flex-wrap:wrap;gap:6px 18px}
+
+/* ===== app screen inside the phone ===== */
+.ap{display:grid;grid-template-rows:auto 1fr auto;min-height:0;background:#F4F6F5;color:#14201E;font-family:var(--font)}
+.ap-nav{display:grid;grid-template-columns:28px 1fr 28px;align-items:center;padding:6px 14px 10px;background:#FFFFFF;border-bottom:1px solid #E6ECEA;text-align:center}
+.ap-nav b{font-size:15px}
+.ap-back{font-size:28px;line-height:1;color:var(--brand);transform:scaleX(-1)}
+.ap-act{color:var(--brand);display:grid;place-items:center}
+.ap-body{padding:10px 12px;display:grid;gap:8px;align-content:start;overflow:hidden}
+.ap-shopcard{display:flex;gap:10px;align-items:center;background:#FFFFFF;border-radius:14px;padding:8px;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+.ap-shop{width:86px;height:64px;border-radius:10px;flex:none;display:block}
+.ap-shopcard b{display:block;font-size:14px}
+.ap-shopcard small{display:block;font-size:11px;color:#6A7A77}
+.ap-chip{display:inline-block;margin-top:4px;font-size:10px;font-weight:700;color:var(--brand);background:var(--brand-soft);border-radius:999px;padding:1px 8px}
+.ap-score{display:flex;align-items:center;gap:12px;background:#FFFFFF;border-radius:14px;padding:12px;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+.ap-ring{position:relative;width:74px;height:74px;flex:none}
+.ap-ring svg{width:100%;height:100%;display:block}
+.ap-ring span{position:absolute;inset:0;display:grid;place-content:center;text-align:center;line-height:1.05}
+.ap-ring b{font-size:19px}
+.ap-ring small{font-size:10px;color:#6A7A77}
+.ap-score > div b{display:block;font-size:15px}
+.ap-score > div small{font-size:12px;color:#6A7A77}
+.ap-counts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.ap-counts span{border-radius:12px;padding:7px 4px;text-align:center;font-size:11px;font-weight:600;display:grid;line-height:1.2}
+.ap-counts b{font-size:17px}
+.c-bad{background:#FBE8E5;color:#B4382A} .c-warn{background:#FBF0D8;color:#966100} .c-ok{background:#DFF4EB;color:#03875F}
+.ap-sec{font-size:12px;font-weight:700;color:#6A7A77;padding-inline:4px;margin-top:2px}
+.ap-row{display:flex;align-items:center;gap:10px;background:#FFFFFF;border-radius:12px;padding:9px 10px;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+.ap-row > div{flex:1;min-width:0}
+.ap-row b{display:block;font-size:12.5px;line-height:1.35}
+.ap-row small{display:block;font-size:11px;color:#6A7A77}
+.ap-ic{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:13px;flex:none}
+.ap-ic.bad{background:#FBE8E5;color:#B4382A} .ap-ic.ok{background:#DFF4EB;color:#03875F}
+.ap-chev{color:#B5C0BD;font-size:20px;line-height:1}
+.ap-cta{margin-top:4px;background:var(--brand);color:#FFFFFF;text-align:center;font-weight:700;font-size:14px;border-radius:14px;padding:12px}
+.ap-tabs{display:grid;grid-template-columns:repeat(4,1fr);background:rgba(255,255,255,.96);border-top:1px solid #E6ECEA;padding:7px 0 4px}
+.ap-tabs span{display:grid;justify-items:center;gap:2px;font-size:10px;color:#8A9895;font-weight:500}
+.ap-tabs span.on{color:var(--brand);font-weight:700}
 </style>
 
 <div dir="rtl" lang="ar">
@@ -546,7 +583,39 @@ tr:last-child td{border-bottom:0}
             <svg width="16" height="12" viewBox="0 0 16 12" aria-hidden="true"><path d="M8 11.5 5.6 9a3.4 3.4 0 0 1 4.8 0Z" fill="#111"/><path d="M3.4 6.9a6.5 6.5 0 0 1 9.2 0l-1.4 1.4a4.5 4.5 0 0 0-6.4 0Z" fill="#111"/><path d="M1.2 4.7a9.6 9.6 0 0 1 13.6 0l-1.4 1.4a7.6 7.6 0 0 0-10.8 0Z" fill="#111"/></svg>
             <svg width="27" height="13" viewBox="0 0 27 13" aria-hidden="true"><rect x="0.5" y="0.5" width="23" height="12" rx="3.5" fill="none" stroke="#111" stroke-opacity=".4"/><rect x="2" y="2" width="18" height="9" rx="2" fill="#111"/><path d="M25 4.5v4a2 2 0 0 0 0-4Z" fill="#111" fill-opacity=".45"/></svg>
           </span></div>
-          <img class="shot" src="__SHOT__" alt="لقطة من تطبيق مُيسّر: تقرير جاهزية مقهى بنسبة 63%" width="390" height="772">
+          <div class="ap">
+            <div class="ap-nav"><span class="ap-back">‹</span><b>تقرير الجاهزية</b><span class="ap-act"><i data-i="copy" data-s="17"></i></span></div>
+            <div class="ap-body">
+              <div class="ap-shopcard"><svg class="ap-shop" viewBox="0 0 120 90" aria-hidden="true">
+  <rect width="120" height="90" fill="#E7F1EC"/>
+  <rect x="8" y="14" width="104" height="66" rx="2" fill="#F4EFE7"/>
+  <rect x="16" y="18" width="88" height="15" rx="2" fill="#135547"/>
+  <text x="60" y="29.5" text-anchor="middle" font-size="9.5" font-weight="700" fill="#FFFFFF" font-family="Tajawal, IBM Plex Sans Arabic, sans-serif">مقهى الحي</text>
+  <g>
+    <path d="M10 35h100v7H10z" fill="#AFA5DA"/>
+    <path d="M10 42a6.25 4 0 0 0 12.5 0M22.5 42a6.25 4 0 0 0 12.5 0M35 42a6.25 4 0 0 0 12.5 0M47.5 42a6.25 4 0 0 0 12.5 0M60 42a6.25 4 0 0 0 12.5 0M72.5 42a6.25 4 0 0 0 12.5 0M85 42a6.25 4 0 0 0 12.5 0M97.5 42a6.25 4 0 0 0 12.5 0" fill="#AFA5DA"/>
+    <path d="M22.5 35h12.5v7H22.5zM47.5 35h12.5v7H47.5zM72.5 35h12.5v7H72.5zM97.5 35h12.5v7H97.5z" fill="#FFFFFF" opacity=".85"/>
+  </g>
+  <rect x="16" y="48" width="40" height="28" rx="1.5" fill="#BFD6DE"/>
+  <path d="M20 72 L34 50 M28 74 L44 50" stroke="#FFFFFF" stroke-width="2.5" opacity=".55"/>
+  <rect x="64" y="48" width="18" height="30" rx="1.5" fill="#2E4B45"/>
+  <circle cx="79" cy="64" r="1.2" fill="#E9D9A6"/>
+  <rect x="88" y="48" width="16" height="28" rx="1.5" fill="#BFD6DE"/>
+  <rect x="0" y="80" width="120" height="10" fill="#C9CFCC"/>
+  <path d="M60 80h28v3H60z" fill="#AEB5B2"/>
+</svg><div><b>مقهى الحي</b><small>العزيزية · 9 أكتوبر</small><span class="ap-chip">4 صور مفحوصة</span></div></div>
+              <div class="ap-score">
+                <div class="ap-ring"><svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="42" fill="none" stroke="#EEF2F0" stroke-width="10"/><circle cx="50" cy="50" r="42" fill="none" stroke="#7D87CC" stroke-width="10" stroke-linecap="round" stroke-dasharray="166 264" transform="rotate(-90 50 50)"/></svg><span><b>63%</b><small>جاهزية</small></span></div>
+                <div><b>قريب من الجاهزية</b><small>عدّل بندين وقدّم بثقة</small></div>
+              </div>
+              <div class="ap-counts"><span class="c-bad"><b>2</b>تعديل</span><span class="c-warn"><b>2</b>مراجعة</span><span class="c-ok"><b>6</b>مطابق</span></div>
+              <div class="ap-sec">يحتاج تعديل</div>
+              <div class="ap-row"><span class="ap-ic bad">!</span><div><b>اللوحة أكبر من إطار الواجهة</b><small>صغّرها لتكون داخل الإطار</small></div><span class="ap-chev">‹</span></div>
+              <div class="ap-row"><span class="ap-ic bad">!</span><div><b>المدخل بدون منحدر</b><small>أضف منحدراً بجانب الدرج</small></div><span class="ap-chev">‹</span></div>
+              <div class="ap-cta">عدّل وأعد الفحص</div>
+            </div>
+            <div class="ap-tabs"><span><i data-i="home" data-s="19"></i>الرئيسية</span><span class="on"><i data-i="scan" data-s="19"></i>الفحص</span><span><i data-i="chat" data-s="19"></i>المساعد</span><span><i data-i="file" data-s="19"></i>تقاريري</span></div>
+          </div>
           <div class="home-ind"></div>
         </div>
       </div>

@@ -57,7 +57,7 @@ button{cursor:pointer}
 
 /* utility strip */
 .strip{background:var(--band);color:var(--band-fg);font-size:13px}
-.strip .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:36px;flex-wrap:wrap;padding-block:4px}
+.strip .wrap{display:flex;align-items:center;justify-content:flex-end;gap:12px;min-height:36px;flex-wrap:wrap;padding-block:4px}
 .status{display:inline-flex;align-items:center;gap:6px;color:var(--band-muted)}
 .status::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--band-muted)}
 .status[data-s="ok"]::before{background:#4FD1A5}
@@ -493,7 +493,6 @@ tr:last-child td{border-bottom:0}
 
 <div class="strip">
   <div class="wrap">
-    <span>نسخة تجريبية مقدّمة في هاكاثون الابتكار البلدي 2026 · مكة المكرمة</span>
     <div>
       <span class="status" id="status" data-s="">نتحقق من حالة الخدمة…</span>
       <span class="a11y" role="group" aria-label="حجم الخط"><span>حجم الخط</span><button type="button" data-z="0.9" aria-label="تصغير الخط">أ-</button><button type="button" data-z="1" aria-pressed="true" aria-label="الحجم الافتراضي">أ</button><button type="button" data-z="1.12" aria-label="تكبير الخط">أ+</button></span>

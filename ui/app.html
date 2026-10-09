@@ -541,6 +541,26 @@ tr:last-child td{border-bottom:0}
 .fab-ic{display:grid;place-items:center;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.16)}
 .fab:hover{background:var(--brand-ink)}
 @media (max-width:960px){.fab{bottom:calc(80px + env(safe-area-inset-bottom,0px));inset-inline-end:16px;padding:6px}.fab-t{display:none}}
+
+/* ===== language picker ===== */
+.langbtn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line-strong);background:var(--surface);color:var(--fg);border-radius:var(--r-sm);padding:8px 12px;font-size:14px;font-weight:600;max-width:180px}
+.langbtn span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.langbtn:hover{border-color:var(--brand);color:var(--brand-ink)}
+.lp{position:fixed;inset:0;z-index:60;background:rgba(10,30,26,.45);display:grid;place-items:center;padding:16px}
+.lp-box{background:var(--surface);border-radius:16px;width:min(560px,100%);max-height:min(640px,90vh);display:grid;grid-template-rows:auto auto auto auto auto auto 1fr auto;gap:10px;padding:20px;overflow:hidden;box-shadow:0 30px 70px rgba(0,0,0,.25)}
+.lp-head{display:flex;justify-content:space-between;align-items:center}
+.lp-head h2{font-size:20px}
+.lp-x{border:0;background:var(--surface-2);width:36px;height:36px;border-radius:50%;font-size:22px;line-height:1;color:var(--muted)}
+.lp-auto{font-size:13px;color:var(--brand-ink);background:var(--brand-soft);border-radius:8px;padding:6px 10px}
+.lp-sec{font-size:13px;font-weight:700;color:var(--subtle);margin-top:4px}
+.lp-pop{display:flex;flex-wrap:wrap;gap:8px}
+.lp-pop button,.lp-list button{border:1px solid var(--line-strong);background:var(--surface);border-radius:999px;padding:7px 14px;font-size:14px;font-weight:600;color:var(--fg)}
+.lp-pop button[aria-pressed="true"],.lp-list button[aria-pressed="true"]{background:var(--brand);border-color:var(--brand);color:#FFFFFF}
+.lp-list{overflow-y:auto;min-height:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;align-content:start;padding-bottom:4px}
+.lp-list button{width:100%;border-radius:10px;display:flex;align-items:center;justify-content:space-between;gap:8px;text-align:start;font-weight:500}
+.lp-list button small{color:var(--subtle);font-size:12px}
+.lp-list button[aria-pressed="true"] small{color:#E2F1EC}
+@media (max-width:520px){.lp-list{grid-template-columns:1fr}.langbtn span{max-width:80px}}
 </style>
 
 <div dir="rtl" lang="ar">
@@ -558,9 +578,8 @@ tr:last-child td{border-bottom:0}
       <a href="#board" data-go="board"><i data-i="chart" data-s="18"></i>لوحة الأمانة</a>
     </nav>
     <div class="hdr-tools">
-      <label class="langbox" for="lang" title="لغة التقرير والمساعد"><i data-i="globe" data-s="17"></i><span class="sr">لغة التقرير والمساعد</span>
-        <select id="lang"></select>
-      </label>
+      <button class="langbtn" id="langBtn" type="button" aria-haspopup="dialog" title="لغة التقرير والمساعد"><i data-i="globe" data-s="18"></i><span id="langName">العربية</span></button>
+      <select id="lang" class="sr" tabindex="-1" aria-hidden="true"></select>
       <a class="btn btn-primary hdr-cta" href="#check" data-go="check">ابدأ الفحص</a>
     </div>
   </div>
@@ -909,6 +928,21 @@ tr:last-child td{border-bottom:0}
 
 <a class="fab" href="#ask" data-go="ask" id="fab" aria-label="اسأل مُيسّر بالصوت أو الكتابة"><span class="fab-ic"><i data-i="mic" data-s="22"></i></span><span class="fab-t">اسأل مُيسّر</span></a>
 
+
+<div class="lp" id="lp" hidden>
+  <div class="lp-box" role="dialog" aria-modal="true" aria-labelledby="lpT">
+    <div class="lp-head"><h2 id="lpT">اختر لغتك</h2><button class="lp-x" id="lpX" type="button" aria-label="إغلاق">×</button></div>
+    <p class="note">يطلع التقرير ورد المساعد باللغة اللي تختارها. والمساعد يفهم أي لغة تكتب أو تتكلم فيها.</p>
+    <p class="lp-auto" id="lpAuto" hidden></p>
+    <label class="sr" for="lpQ">ابحث عن لغتك</label>
+    <input class="input" id="lpQ" type="search" dir="auto" autocomplete="off" placeholder="ابحث عن لغتك… Search your language">
+    <div id="lpPopWrap"><div class="lp-sec">الأكثر استخداماً</div><div class="lp-pop" id="lpPop"></div></div>
+    <div class="lp-sec" id="lpAllT">كل اللغات</div>
+    <ul class="lp-list" id="lpList"></ul>
+    <p class="note" id="lpNone" hidden>ما لقينا هذي اللغة في القائمة، بس تقدر تكتب للمساعد فيها ويرد عليك بنفسها.</p>
+  </div>
+</div>
+
 <nav class="bnav" aria-label="التنقل">
   <a href="#home" data-go="home"><i data-i="home" data-s="22"></i>الرئيسية</a>
   <a href="#check" data-go="check"><i data-i="scan" data-s="22"></i>الفحص</a>
@@ -1001,12 +1035,51 @@ const fmtShort = new Intl.DateTimeFormat("ar-SA-u-nu-latn-ca-gregory",{month:"sh
 function newNo(){ const d=new Date(); const p=n=>String(n).padStart(2,"0"); return "MYS-"+String(d.getFullYear()).slice(2)+p(d.getMonth()+1)+p(d.getDate())+"-"+String(Math.floor(1000+Math.random()*9000)); }
 
 /* ---------- language ---------- */
+const AR_NAME = {ar:"العربية",en:"الإنجليزية",ur:"الأردو",hi:"الهندية",bn:"البنغالية",id:"الإندونيسية",ms:"الملايوية",tl:"الفلبينية",fa:"الفارسية",tr:"التركية",ps:"البشتو",ne:"النيبالية",si:"السنهالية",ta:"التاميلية",te:"التيلوغوية",ml:"المالايالامية",pa:"البنجابية",gu:"الغوجاراتية",mr:"الماراثية",my:"البورمية",th:"التايلاندية",vi:"الفيتنامية",km:"الخميرية",zh:"الصينية",ja:"اليابانية",ko:"الكورية",fr:"الفرنسية",es:"الإسبانية",pt:"البرتغالية",de:"الألمانية",it:"الإيطالية",nl:"الهولندية",ru:"الروسية",uk:"الأوكرانية",pl:"البولندية",ro:"الرومانية",el:"اليونانية",sq:"الألبانية",bs:"البوسنية",az:"الأذربيجانية",uz:"الأوزبكية",kk:"الكازاخية",ku:"الكردية",so:"الصومالية",am:"الأمهرية",ti:"التغرينية",sw:"السواحيلية",ha:"الهوسا",yo:"اليوروبا"};
+const POPULAR = ["ar","en","ur","hi","bn","id","tl","ne","fa","tr","fr","so"];
 const langSel = $("#lang");
 Object.entries(LANGS).forEach(([k,v])=>langSel.append(h("option",{value:k, text:v.native})));
-try{ const l = localStorage.getItem("muyassir.lang"); if(l && LANGS[l]) langSel.value = l; }catch(e){}
-function syncLang(){ $("#factLang").textContent = LNAME[langSel.value]; }
-langSel.addEventListener("change",()=>{ try{ localStorage.setItem("muyassir.lang", langSel.value); }catch(e){} syncLang(); });
+function deviceLang(){
+  const list = (navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language||""]);
+  for(const tag of list){ const t = String(tag||"").toLowerCase(); const base = t.split("-")[0]; const code = base==="fil" ? "tl" : base; if(LANGS[code]) return code; }
+  return null;
+}
+let autoLang = null;
+(function initLang(){
+  let l = null; try{ l = localStorage.getItem("muyassir.lang"); }catch(e){}
+  if(!(l && LANGS[l])){ l = deviceLang(); if(l && l!=="ar") autoLang = l; }
+  if(l && LANGS[l]) langSel.value = l;
+})();
+function syncLang(){ $("#factLang").textContent = LNAME[langSel.value]; $("#langName").textContent = LNAME[langSel.value]; }
+function setLang(code){ if(!LANGS[code]) return; langSel.value = code; try{ localStorage.setItem("muyassir.lang", code); }catch(e){} syncLang(); langSel.dispatchEvent(new Event("change")); }
+langSel.addEventListener("change", syncLang);
 syncLang();
+/* picker */
+const lp = $("#lp");
+function langButton(code, withHint){
+  const v = LANGS[code];
+  const b = h("button",{type:"button", "aria-pressed": String(langSel.value===code), lang:code, onclick:()=>{ setLang(code); closeLP(); }}, h("span",{text:v.native}), withHint && v.native!==AR_NAME[code] ? h("small",{text:AR_NAME[code]||v.name}) : null);
+  return b;
+}
+function renderLP(q){
+  q = (q||"").trim().toLowerCase();
+  const pop = $("#lpPop"); pop.innerHTML = ""; POPULAR.forEach(c=>pop.append(langButton(c,false)));
+  $("#lpPopWrap").hidden = !!q;
+  const list = $("#lpList"); list.innerHTML = "";
+  const hits = Object.keys(LANGS).filter(c=>{ if(!q) return true; const v=LANGS[c]; return [v.native, v.name, AR_NAME[c]||"", c].some(x=>x.toLowerCase().includes(q)); });
+  hits.forEach(c=>list.append(h("li",null, langButton(c,true))));
+  $("#lpNone").hidden = hits.length>0; $("#lpAllT").hidden = hits.length===0;
+}
+let lpReturn = null;
+function openLP(){ lpReturn = document.activeElement; $("#lpQ").value = ""; renderLP(""); 
+  const a=$("#lpAuto"); if(autoLang && autoLang===langSel.value){ a.textContent = "اخترنا لك لغة جهازك تلقائياً: "+LNAME[autoLang]+". تقدر تغيّرها من هنا."; a.hidden=false; } else a.hidden=true;
+  lp.hidden = false; setTimeout(()=>$("#lpQ").focus(),30); }
+function closeLP(){ lp.hidden = true; if(lpReturn && lpReturn.focus) lpReturn.focus(); }
+$("#langBtn").addEventListener("click", openLP);
+$("#lpX").addEventListener("click", closeLP);
+lp.addEventListener("click", e=>{ if(e.target===lp) closeLP(); });
+document.addEventListener("keydown", e=>{ if(e.key==="Escape" && !lp.hidden) closeLP(); });
+$("#lpQ").addEventListener("input", e=>renderLP(e.target.value));
 
 /* ---------- router ---------- */
 const VIEWS = ["home","check","ask","board"];

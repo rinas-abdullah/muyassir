@@ -561,6 +561,18 @@ tr:last-child td{border-bottom:0}
 .lp-list button small{color:var(--subtle);font-size:12px}
 .lp-list button[aria-pressed="true"] small{color:#E2F1EC}
 @media (max-width:520px){.lp-list{grid-template-columns:1fr}.langbtn span{max-width:80px}}
+
+/* ===== voice / text mode ===== */
+.modesw{margin-inline-start:auto}
+.modesw button{display:inline-flex;align-items:center;gap:6px}
+.chat-head .btn{margin-inline-start:0}
+.chatbox:not(.voice-mode) .mic{display:none}
+.chatbox:not(.voice-mode) .composer{grid-template-columns:minmax(0,1fr) auto}
+.chatbox.voice-mode .mic{width:auto;padding-inline:20px;background:var(--brand);border-color:var(--brand);color:#FFFFFF;gap:8px}
+.chatbox.voice-mode .mic::after{content:"اضغط وتكلّم";font-size:14px;font-weight:700}
+.chatbox.voice-mode .mic[aria-pressed="true"]{background:var(--bad);border-color:var(--bad)}
+.chatbox.voice-mode .mic[aria-pressed="true"]::after{content:"أسمعك…"}
+@media (max-width:600px){.chat-head{flex-wrap:wrap}.modesw{order:3;width:100%;justify-content:center}.modesw button{flex:1;justify-content:center}}
 </style>
 
 <div dir="rtl" lang="ar">
@@ -851,10 +863,11 @@ tr:last-child td{border-bottom:0}
   <main class="main">
     <div class="wrap">
       <div class="chat-grid">
-        <section class="card chatbox" aria-label="المحادثة">
+        <section class="card chatbox" id="chatbox" aria-label="المحادثة">
           <div class="chat-head">
             <span class="avatar"><img class="lg" src="__LOGO__" width="26" height="26" alt=""></span>
             <div><b>مساعد مُيسّر</b><small>يرد بالصوت والكتابة</small></div>
+            <div class="seg modesw" role="group" aria-label="طريقة المحادثة"><button type="button" data-m="text" aria-pressed="true"><i data-i="chat" data-s="16"></i>كتابة</button><button type="button" data-m="voice" aria-pressed="false"><i data-i="mic" data-s="16"></i>صوت</button></div>
             <button class="btn btn-outline btn-sm" id="clearChat" type="button"><i data-i="refresh" data-s="16"></i>محادثة جديدة</button>
           </div>
           <div class="chat" id="chat" aria-live="polite"></div>
@@ -866,7 +879,7 @@ tr:last-child td{border-bottom:0}
               <button class="btn btn-outline mic" id="mic" type="button" aria-pressed="false" aria-label="تكلّم"><i data-i="mic" data-s="19"></i></button>
               <button class="btn btn-primary" id="send" type="submit"><i data-i="send" data-s="18"></i><span class="sr">أرسل</span></button>
             </form>
-            <div class="chat-tools"><label class="voice-tg"><input type="checkbox" id="voiceReply" checked> الرد بالصوت</label><span class="listen" id="listenHint" hidden><span class="dots"></span>أسمعك… تكلّم الحين</span><button class="btn btn-text btn-sm" id="speakLast" type="button" hidden><i data-i="volume" data-s="16"></i>استمع لآخر إجابة</button><button class="btn btn-outline btn-sm" id="stopVoice" type="button" hidden><i data-i="x" data-s="15"></i>إيقاف الصوت</button></div>
+            <div class="chat-tools"><input type="checkbox" id="voiceReply" hidden><span class="listen" id="listenHint" hidden><span class="dots"></span>أسمعك… تكلّم الحين</span><button class="btn btn-text btn-sm" id="speakLast" type="button" hidden><i data-i="volume" data-s="16"></i>استمع لآخر إجابة</button><button class="btn btn-outline btn-sm" id="stopVoice" type="button" hidden><i data-i="x" data-s="15"></i>إيقاف الصوت</button></div>
             <p class="note" id="voiceHint" hidden></p>
             <p class="err" id="askerr" hidden></p>
           </div>
@@ -875,9 +888,9 @@ tr:last-child td{border-bottom:0}
           <div class="card card-pad">
             <h3><i data-i="mic" data-s="18"></i>كيف تكلّم مُيسّر</h3>
             <ul class="tips">
-              <li><i data-i="mic" data-s="16"></i>اضغط زر المايك وتكلّم بسؤالك.</li>
-              <li><i data-i="chat" data-s="16"></i>أو اكتب سؤالك في المربع.</li>
-              <li><i data-i="volume" data-s="16"></i>يوصلك الرد مكتوب ومسموع، وتقدر توقف الصوت من «الرد بالصوت».</li>
+              <li><i data-i="chat" data-s="16"></i>اختر «كتابة» أو «صوت» من أعلى المحادثة.</li>
+              <li><i data-i="mic" data-s="16"></i>في «صوت»: اضغط «اضغط وتكلّم» وقل سؤالك، ويرد عليك مسموع ومكتوب.</li>
+              <li><i data-i="volume" data-s="16"></i>في «كتابة»: اكتب سؤالك، ويوصلك الرد مكتوب فقط.</li>
             </ul>
           </div>
           <div class="card card-pad">
@@ -1663,16 +1676,29 @@ $("#mic").addEventListener("click", ()=>{
   rec = new SR(); rec.lang = (LANGS[langSel.value]||LANGS.ar).v; rec.interimResults = true; rec.maxAlternatives = 1;
   rec.onresult = ev=>{ let t=""; for(let i=0;i<ev.results.length;i++){ t += ev.results[i][0].transcript; } $("#q").value = t; };
   rec.onerror = ev=>{ stopListening(); if(ev.error==="not-allowed"||ev.error==="service-not-allowed"){ errEl.textContent="اسمح للموقع باستخدام المايك من إعدادات المتصفح، أو اكتب سؤالك."; errEl.hidden=false; } else if(ev.error==="no-speech"){ errEl.textContent="ما سمعنا صوت. قرّب الجوال وتكلّم بعد ما يصير الزر أحمر."; errEl.hidden=false; } else if(ev.error!=="aborted"){ errEl.textContent="ما قدرنا نسمعك. جرّب مرة ثانية أو اكتب سؤالك."; errEl.hidden=false; } };
-  rec.onend = ()=>{ const t = ($("#q").value||"").trim(); stopListening(); if(t){ $("#voiceReply").checked = true; $("#askform").requestSubmit(); } };
+  rec.onend = ()=>{ const t = ($("#q").value||"").trim(); stopListening(); if(t){ $("#askform").requestSubmit(); } };
   listening = true; $("#mic").setAttribute("aria-pressed","true"); $("#listenHint").hidden = false;
   try{ rec.start(); }catch(e){ stopListening(); }
 });
 function voiceFor(text){ const d = KBdetect(text); return (!d || (d==="en" && langSel.value!=="ar")) ? langSel.value : d; }
 $("#stopVoice").addEventListener("click", stopSpeaking);
-$("#voiceReply").addEventListener("change", e=>{ if(!e.target.checked) stopSpeaking(); });
 function speakReply(text){ if($("#voiceReply").checked && TTS) speak(text, voiceFor(text)); }
 /* floating bot button: hidden on the assistant page */
 function syncFab(){ const f=$("#fab"); if(f) f.hidden = current==="ask"; }
+
+
+/* ---------- conversation mode: text or voice ---------- */
+function setMode(m){
+  const voice = m==="voice";
+  $("#chatbox").classList.toggle("voice-mode", voice);
+  $$(".modesw button").forEach(b=>b.setAttribute("aria-pressed", String(b.dataset.m===m)));
+  $("#voiceReply").checked = voice;
+  $("#q").placeholder = voice ? "اضغط «اضغط وتكلّم» وقل سؤالك، أو اكتبه هنا…" : "اكتب سؤالك… مثلاً: وش أحتاج عشان أفتح بقالة؟";
+  if(!voice) stopSpeaking();
+  try{ localStorage.setItem("muyassir.mode", m); }catch(e){}
+}
+$$(".modesw button").forEach(b=>b.addEventListener("click", ()=>{ if(b.dataset.m==="voice") unlockTTS(); setMode(b.dataset.m); }));
+(function(){ let m="text"; try{ m = localStorage.getItem("muyassir.mode") || "text"; }catch(e){} setMode(m); })();
 
 /* start */
 window.addEventListener("hashchange",()=>{ const v=(location.hash||"").slice(1); if(VIEWS.includes(v) && v!==current) go(v); });

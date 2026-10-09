@@ -11,6 +11,7 @@ const root = path.join(__dirname, "..");
 const src = fs.readFileSync(path.join(root, "ui/app.html"), "utf8");
 const kb = fs.readFileSync(path.join(root, "public/kb.js"), "utf8");
 const logoData = "data:image/png;base64," + fs.readFileSync(process.env.LOGO_SMALL || path.join(root, "public/logo.png")).toString("base64");
+const shotData = "data:image/jpeg;base64," + fs.readFileSync(path.join(root, "public/phone-shot.jpg")).toString("base64");
 if (!src.includes("<!--KB-->")) throw new Error("ui/app.html is missing the <!--KB--> marker");
 
 const head = `<!doctype html>
@@ -23,13 +24,13 @@ const head = `<!doctype html>
 <link rel="icon" type="image/png" href="logo.png">
 <link rel="apple-touch-icon" href="logo-512.png">
 `;
-const standalone = head + src.split("__LOGO__").join("logo.png").replace("<!--KB-->", '<script src="kb.js"></script>').replace("</style>", "</style>\n</head>\n<body>") + "\n</body>\n</html>\n";
+const standalone = head + src.split("__LOGO__").join("logo.png").split("__SHOT__").join("phone-shot.jpg").replace("<!--KB-->", '<script src="kb.js"></script>').replace("</style>", "</style>\n</head>\n<body>") + "\n</body>\n</html>\n";
 fs.writeFileSync(path.join(root, "public/index.html"), standalone);
 console.log("public/index.html", standalone.length, "bytes");
 
 const out = process.argv[2];
 if (out) {
-  const single = src.split("__LOGO__").join(logoData).replace("<!--KB-->", "<script>\n" + kb + "\n</script>");
+  const single = src.split("__LOGO__").join(logoData).split("__SHOT__").join(shotData).replace("<!--KB-->", "<script>\n" + kb + "\n</script>");
   fs.writeFileSync(out, single);
   console.log(out, single.length, "bytes");
 }

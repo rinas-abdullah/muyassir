@@ -72,3 +72,10 @@ test("detectLang tells the five languages apart", () => {
   assert.equal(core.detectLang("Apa syarat untuk membuka restoran?"), "id");
   assert.equal(core.detectLang("What do I need for a café?"), "en");
 });
+
+test("offline assistant answers from the knowledge base without an API key", () => {
+  assert.match(core.offlineAnswer("وش أحتاج عشان أفتح بقالة؟"), /اشتراطات بقالة/);
+  assert.match(core.offlineAnswer("وش اشتراطات اللوحة؟"), /اللوحة التجارية/);
+  assert.match(core.offlineAnswer("كم رسوم الرخصة؟"), /940/);
+  assert.match(core.offlineAnswer("What should my café signboard look like?"), /signboard/);
+});

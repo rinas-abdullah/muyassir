@@ -480,15 +480,6 @@ tr:last-child td{border-bottom:0}
 
 <div dir="rtl" lang="ar">
 
-<div class="strip">
-  <div class="wrap">
-    <div>
-      <span class="status" id="status" data-s="">نتحقق من حالة الخدمة…</span>
-      <span class="a11y" role="group" aria-label="حجم الخط"><span>حجم الخط</span><button type="button" data-z="0.9" aria-label="تصغير الخط">أ-</button><button type="button" data-z="1" aria-pressed="true" aria-label="الحجم الافتراضي">أ</button><button type="button" data-z="1.12" aria-label="تكبير الخط">أ+</button></span>
-    </div>
-  </div>
-</div>
-
 <header class="header">
   <div class="wrap">
     <a class="logo" href="#home" data-go="home" aria-label="مُيسّر، الصفحة الرئيسية">
@@ -1311,7 +1302,7 @@ async function loadStats(){
 /* ---------- backend: inside Claude (capabilities) or the standalone server (/api) ---------- */
 const backend = {kind:null, ready:false, mock:false, msg:"نتصل بخدمة الفحص…", maxCount:4, pin:""};
 function setStatus(){
-  const s = $("#status");
+  const s = $("#status"); if(!s) return;
   if(backend.ready && backend.mock){ s.dataset.s="demo"; s.textContent="الخدمة تعمل بالوضع التجريبي"; }
   else if(backend.ready){ s.dataset.s="ok"; s.textContent="الخدمة متاحة"; }
   else if(backend.kind){ s.dataset.s="off"; s.textContent="الفحص الذكي غير متاح حالياً"; }
@@ -1437,10 +1428,6 @@ async function initServer(){
 if(window.claude && typeof window.claude.use==="function") initClaude(); else initServer();
 
 
-/* ---------- accessibility: font size ---------- */
-function setZoom(z){ document.body.style.zoom = z==1 ? "" : z; $$(".a11y button").forEach(b=>b.setAttribute("aria-pressed", String(+b.dataset.z===+z))); try{ localStorage.setItem("muyassir.zoom", z); }catch(e){} }
-$$(".a11y button").forEach(b=>b.addEventListener("click",()=>setZoom(b.dataset.z)));
-try{ const z = localStorage.getItem("muyassir.zoom"); if(z) setZoom(z); }catch(e){}
 /* ---------- service info tabs ---------- */
 $$("#infotabs button").forEach(b=>b.addEventListener("click",()=>{ $$("#infotabs button").forEach(x=>{ x.setAttribute("aria-pressed", String(x===b)); $("#"+x.dataset.p).hidden = x!==b; }); }));
 /* ---------- page rating (kept on this device only) ---------- */

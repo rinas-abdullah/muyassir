@@ -4,13 +4,16 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="مُيسّر: صوّر محلك واعرف جاهزيتك للترخيص قبل ما تقدّم">
-<meta name="theme-color" content="#0C4A3F">
+<meta name="theme-color" content="#135547">
+<link rel="icon" type="image/png" href="logo.png">
+<link rel="apple-touch-icon" href="logo-512.png">
 <title>مُيسّر</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Noto+Sans+Bengali:wght@400;600&family=Noto+Nastaliq+Urdu:wght@400;600&display=swap">
 <style>
-/* Layout: a public e-service portal. Utility strip, sticky header with nav, page header band with breadcrumb and service facts,
+/* Single light theme on purpose: same colours as the logo on every device.
+   Layout: a public e-service portal. Utility strip, sticky header with nav, page header band with breadcrumb and service facts,
    then a two-column service area (work card + guidance sidebar). Bottom tab bar on phones. Light-first, dark supported. */
 :root{
   --bg:#F4F7F6; --surface:#FFFFFF; --surface-2:#EEF4F2; --line:#DCE6E3; --line-strong:#C3D2CE;
@@ -23,26 +26,6 @@
   --font:"IBM Plex Sans Arabic","Noto Sans Bengali","Noto Nastaliq Urdu",Tahoma,"Segoe UI",sans-serif;
   --r-lg:16px; --r:12px; --r-sm:8px;
   color-scheme:light;
-}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#0B1416; --surface:#112023; --surface-2:#16292D; --line:#21363A; --line-strong:#2E484D;
-  --fg:#E7F1EE; --muted:#A8BEBA; --subtle:#87A19C;
-  --brand:#2FBF8E; --brand-ink:#72D9B6; --brand-soft:rgba(47,191,142,.14); --on-brand:#04221A; --mint:#2FCF9A; --lav:#BDB4E6;
-  --gold:#AFA5DA; --gold-soft:rgba(175,165,218,.15); --gold-ink:#CFC8EE;
-  --ok:#3FD3A0; --ok-soft:rgba(63,211,160,.13); --bad:#F2907F; --bad-soft:rgba(242,144,127,.13); --warn:#E8B44E; --warn-soft:rgba(232,180,78,.13);
-  --band:#0B2E27; --band-fg:#E7F1EE; --band-muted:#9CC3B8;
-  --shadow:0 1px 2px rgba(0,0,0,.35);
-  color-scheme:dark;
-}}
-:root[data-theme="dark"]{
-  --bg:#0B1416; --surface:#112023; --surface-2:#16292D; --line:#21363A; --line-strong:#2E484D;
-  --fg:#E7F1EE; --muted:#A8BEBA; --subtle:#87A19C;
-  --brand:#2FBF8E; --brand-ink:#72D9B6; --brand-soft:rgba(47,191,142,.14); --on-brand:#04221A; --mint:#2FCF9A; --lav:#BDB4E6;
-  --gold:#AFA5DA; --gold-soft:rgba(175,165,218,.15); --gold-ink:#CFC8EE;
-  --ok:#3FD3A0; --ok-soft:rgba(63,211,160,.13); --bad:#F2907F; --bad-soft:rgba(242,144,127,.13); --warn:#E8B44E; --warn-soft:rgba(232,180,78,.13);
-  --band:#0B2E27; --band-fg:#E7F1EE; --band-muted:#9CC3B8;
-  --shadow:0 1px 2px rgba(0,0,0,.35);
-  color-scheme:dark;
 }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
@@ -87,7 +70,7 @@ button{cursor:pointer}
 .logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--fg)}
 .logo b{display:block;font-size:22px;font-weight:700;line-height:1.1}
 .logo small{display:block;font-size:12px;color:var(--subtle);line-height:1.2}
-.mk-l{stroke:var(--lav)} .mk-d{stroke:var(--brand)} .mk-k{stroke:var(--mint)}
+.lg{display:block;object-fit:contain;flex:none}
 .nav{display:flex;gap:4px;margin-inline-end:auto}
 .nav a{display:flex;align-items:center;gap:7px;padding:8px 12px;border-radius:var(--r-sm);text-decoration:none;color:var(--muted);font-weight:500;font-size:15px}
 .nav a:hover{background:var(--surface-2);color:var(--fg)}
@@ -213,7 +196,7 @@ button{cursor:pointer}
 .footer a{color:var(--band-muted);text-decoration:none}
 .footer a:hover{color:var(--band-fg)}
 .footer .logo{color:var(--band-fg)} .footer .logo small{color:var(--band-muted)}
-.footer .mk-d{stroke:var(--band-fg)}
+.footer .lg{background:#FFFFFF;border-radius:10px;padding:3px}
 .f-bottom{border-top:1px solid rgba(255,255,255,.12);padding-top:18px;display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;font-size:13px;color:var(--band-muted)}
 
 /* ---------- SERVICE (check) ---------- */
@@ -377,7 +360,7 @@ button{cursor:pointer}
 @media (max-width:960px){.chat-grid{grid-template-columns:minmax(0,1fr)}}
 .chatbox{display:grid;grid-template-rows:auto 1fr auto;overflow:hidden}
 .chat-head{display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--line)}
-.avatar{display:grid;place-items:center;width:40px;height:40px;border-radius:50%;background:var(--brand-soft);flex:none}
+.avatar{display:grid;place-items:center;width:40px;height:40px;border-radius:50%;background:#FFFFFF;border:1px solid var(--line);flex:none}
 .chat-head b{display:block}
 .chat-head small{display:flex;align-items:center;gap:6px;color:var(--subtle);font-size:12px}
 .chat-head small::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--ok)}
@@ -458,11 +441,6 @@ tr:last-child td{border-bottom:0}
 <body>
 
 <div dir="rtl" lang="ar">
-<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><symbol id="mk" viewBox="0 0 100 100"><g fill="none" stroke-linecap="round" stroke-linejoin="round">
-<path class="mk-l" d="M8 30 V17 Q8 8 17 8 H30" stroke-width="6"/><path class="mk-l" d="M8 70 V83 Q8 92 17 92 H30" stroke-width="6"/>
-<path class="mk-d" d="M70 8 H83 Q92 8 92 17 V30" stroke-width="6"/><path class="mk-d" d="M92 70 V83 Q92 92 83 92 H70" stroke-width="6"/>
-<rect class="mk-d" x="30" y="21" width="38" height="58" rx="8" stroke-width="6"/><path class="mk-d" d="M40 35 H58 M40 45 H51" stroke-width="5"/>
-<path class="mk-k" d="M39 57 L49 67 L74 37" stroke-width="8"/></g></symbol></defs></svg>
 
 <div class="strip">
   <div class="wrap">
@@ -474,7 +452,7 @@ tr:last-child td{border-bottom:0}
 <header class="header">
   <div class="wrap">
     <a class="logo" href="#home" data-go="home" aria-label="مُيسّر، الصفحة الرئيسية">
-      <svg width="40" height="40" viewBox="0 0 100 100" aria-hidden="true"><use href="#mk"/></svg>
+      <img class="lg" src="logo.png" width="40" height="40" alt="">
       <span><b>مُيسّر</b><small>جاهزية المحلات للترخيص</small></span>
     </a>
     <nav class="nav" aria-label="القائمة الرئيسية">
@@ -700,7 +678,7 @@ tr:last-child td{border-bottom:0}
       <div class="chat-grid">
         <section class="card chatbox" aria-label="المحادثة">
           <div class="chat-head">
-            <span class="avatar"><svg width="26" height="26" viewBox="0 0 100 100" aria-hidden="true"><use href="#mk"/></svg></span>
+            <span class="avatar"><img class="lg" src="logo.png" width="26" height="26" alt=""></span>
             <div><b>مساعد مُيسّر</b><small>يجيب بخمس لغات</small></div>
             <button class="btn btn-outline btn-sm" id="clearChat" type="button"><i data-i="refresh" data-s="16"></i>محادثة جديدة</button>
           </div>
@@ -757,7 +735,7 @@ tr:last-child td{border-bottom:0}
     <div class="f-grid">
       <div style="display:grid;gap:12px;align-content:start">
         <a class="logo" href="#home" data-go="home">
-          <svg width="36" height="36" viewBox="0 0 100 100" aria-hidden="true"><use href="#mk"/></svg>
+          <img class="lg" src="logo.png" width="36" height="36" alt="">
           <span><b>مُيسّر</b><small>جاهزية المحلات للترخيص</small></span>
         </a>
         <p>صوّر محلك، واعرف جاهزيتك قبل ما تقدّم. مكمّل لمنصة بلدي، والقرار النهائي للجهة المختصة.</p>
@@ -1111,7 +1089,7 @@ $("#stop").addEventListener("click",()=>ctl && ctl.abort());
 /* ---------- assistant ---------- */
 const SUGG = ["وش أحتاج عشان أفتح بقالة؟","What should my café signboard look like?","مجھے نائی کی دکان کھولنی ہے، کیا چاہیے؟","Apa syarat untuk membuka restoran?","মুদি দোকান খুলতে কী কী লাগবে?"];
 SUGG.forEach(q=>$("#sugg").append(h("button",{type:"button", dir:"auto", text:q, onclick:()=>{ $("#q").value=q; $("#askform").requestSubmit(); }})));
-const BOT = '<svg width="20" height="20" viewBox="0 0 100 100" aria-hidden="true"><use href="#mk"/></svg>';
+const BOT = '<img class="lg" src="logo.png" width="20" height="20" alt="">';
 function bubble(who, text){
   const b = h("div",{class:"bubble", dir:"auto", text});
   const m = h("div",{class:"msg "+who}, who.startsWith("a") ? h("span",{class:"avatar"}) : null, b);

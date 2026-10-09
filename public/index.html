@@ -22,9 +22,9 @@
   --gold:#7D87CC; --gold-soft:#EEEDF9; --gold-ink:#4C5499;
   --ok:#03875F; --ok-soft:#DFF4EB; --bad:#B4382A; --bad-soft:#FBE8E5; --warn:#966100; --warn-soft:#FBF0D8;
   --band:#135547; --band-fg:#E9F4F0; --band-muted:#B2D3C9; --device:#14292C;
-  --shadow:0 1px 2px rgba(16,41,45,.05),0 6px 20px rgba(16,41,45,.06);
+  --shadow:0 1px 2px rgba(16,41,45,.05);
   --font:"IBM Plex Sans Arabic","Noto Sans Bengali","Noto Nastaliq Urdu",Tahoma,"Segoe UI",sans-serif;
-  --r-lg:16px; --r:12px; --r-sm:8px;
+  --r-lg:12px; --r:8px; --r-sm:6px;
   color-scheme:light;
 }
 *{box-sizing:border-box}
@@ -436,6 +436,55 @@ tr:last-child td{border-bottom:0}
 .empty .btns{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
 .pinform{display:grid;gap:12px;max-width:360px;margin-inline:auto;padding:40px 20px;text-align:center;justify-items:center}
 .pinform .row{display:flex;gap:10px;width:100%}
+
+/* ===== government-style additions ===== */
+.a11y{display:inline-flex;align-items:center;gap:4px}
+.a11y span{color:var(--band-muted);margin-inline-end:4px}
+.a11y button{border:1px solid rgba(255,255,255,.28);background:transparent;color:var(--band-fg);border-radius:4px;min-width:28px;height:24px;font-size:12px;font-weight:700;line-height:1;padding:0 6px}
+.a11y button[aria-pressed="true"]{background:var(--band-fg);color:var(--band)}
+.strip .wrap > div{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.hero{background:var(--band) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='88' height='88' viewBox='0 0 88 88'%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='.07' stroke-width='1.3'%3E%3Cpath d='M44 10 L52 36 L78 44 L52 52 L44 78 L36 52 L10 44 L36 36Z'/%3E%3Crect x='25' y='25' width='38' height='38' transform='rotate(45 44 44)'/%3E%3Ccircle cx='44' cy='44' r='6'/%3E%3C/g%3E%3C/svg%3E");border-bottom:0;color:var(--band-fg)}
+.hero h1{color:#FFFFFF}
+.hero-copy > p{color:var(--band-muted)}
+.hero-tag{background:rgba(255,255,255,.12);color:#FFFFFF}
+.hero .btn-primary{background:#FFFFFF;color:var(--brand)}
+.hero .btn-primary:hover{background:var(--brand-soft)}
+.hero .btn-outline{background:transparent;color:#FFFFFF;border-color:rgba(255,255,255,.5)}
+.hero .btn-outline:hover{border-color:#FFFFFF;color:#FFFFFF;background:rgba(255,255,255,.08)}
+.hero .trust{color:var(--band-muted)} .hero .trust .ico{color:var(--lav)}
+.hero .screen{color:var(--fg)}
+.hero .device{background:#0A2E26;box-shadow:0 30px 60px -20px rgba(0,0,0,.45)}
+.kstrip{position:relative;z-index:2;margin-top:-34px}
+.kstrip ul{display:grid;grid-template-columns:repeat(4,1fr);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:0 8px 24px rgba(16,41,45,.08)}
+.kstrip li{display:flex;align-items:center;gap:12px;padding:18px 20px;border-inline-start:1px solid var(--line);min-width:0}
+.kstrip li:first-child{border-inline-start:0}
+.kstrip .ki{display:grid;place-items:center;width:42px;height:42px;border-radius:8px;background:var(--brand-soft);color:var(--brand);flex:none}
+.kstrip b{display:block;font-size:20px;font-weight:700;line-height:1.2;font-variant-numeric:tabular-nums}
+.kstrip small{display:block;font-size:13px;color:var(--subtle)}
+@media (max-width:820px){.kstrip ul{grid-template-columns:1fr 1fr}.kstrip li:nth-child(3){border-inline-start:0}.kstrip li:nth-child(n+3){border-top:1px solid var(--line)}}
+.section-head h2{position:relative;padding-bottom:12px}
+.section-head h2::after{content:"";position:absolute;bottom:0;inset-inline-start:0;width:44px;height:4px;border-radius:2px;background:var(--brand)}
+.section.alt{background:var(--surface);border-block:1px solid var(--line);padding-block:52px;margin-top:56px}
+.section.alt + .section{padding-top:56px}
+.svc-card .start{margin-top:6px;justify-self:start}
+.svc-meta{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--subtle);padding-top:12px;border-top:1px solid var(--line);margin-top:4px}
+.svc-meta span{display:inline-flex;align-items:center;gap:6px}
+.svcinfo{margin-bottom:20px}
+.svcinfo .tabs{padding-inline:20px}
+.svcinfo .pane{padding:20px 24px;display:grid;gap:10px;color:var(--muted)}
+.svcinfo .pane ul{display:grid;gap:8px}
+.svcinfo .pane li{display:flex;gap:10px;align-items:flex-start}
+.svcinfo .pane li .ico{color:var(--brand);margin-top:3px}
+.svcinfo .pane ol{display:grid;gap:8px;counter-reset:n}
+.svcinfo .pane ol li{counter-increment:n}
+.svcinfo .pane ol li::before{content:counter(n);flex:none;display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--brand);color:#fff;font-size:12px;font-weight:700}
+.rate{padding-block:40px 0}
+.rate-box{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px 20px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:16px 20px}
+.rate-box b{font-weight:600}
+.rate-box .btns{display:flex;gap:8px}
+.rate-box .thanks{color:var(--ok);font-weight:600;display:inline-flex;align-items:center;gap:8px}
+.footer{margin-top:48px}
+.f-bottom .copy{display:flex;flex-wrap:wrap;gap:6px 18px}
 </style>
 </head>
 <body>
@@ -445,7 +494,10 @@ tr:last-child td{border-bottom:0}
 <div class="strip">
   <div class="wrap">
     <span>نسخة تجريبية مقدّمة في هاكاثون الابتكار البلدي 2026 · مكة المكرمة</span>
-    <span class="status" id="status" data-s="">نتحقق من حالة الخدمة…</span>
+    <div>
+      <span class="status" id="status" data-s="">نتحقق من حالة الخدمة…</span>
+      <span class="a11y" role="group" aria-label="حجم الخط"><span>حجم الخط</span><button type="button" data-z="0.9" aria-label="تصغير الخط">أ-</button><button type="button" data-z="1" aria-pressed="true" aria-label="الحجم الافتراضي">أ</button><button type="button" data-z="1.12" aria-label="تكبير الخط">أ+</button></span>
+    </div>
   </div>
 </div>
 
@@ -503,39 +555,46 @@ tr:last-child td{border-bottom:0}
     </div>
   </section>
 
+  <div class="kstrip"><div class="wrap"><ul>
+    <li><span class="ki"><i data-i="cash" data-s="20"></i></span><span><b>مجانية</b><small>بدون رسوم أو تسجيل</small></span></li>
+    <li><span class="ki"><i data-i="globe" data-s="20"></i></span><span><b>5 لغات</b><small>للتقرير والمساعد</small></span></li>
+    <li><span class="ki"><i data-i="store" data-s="20"></i></span><span><b id="nActs">4 أنشطة</b><small>مقهى، بقالة، مطعم، حلاقة</small></span></li>
+    <li><span class="ki"><i data-i="list" data-s="20"></i></span><span><b id="nItems">بنود فحص</b><small>لكل نشاط قائمة بنود خاصة</small></span></li>
+  </ul></div></div>
+
   <section class="section">
     <div class="wrap">
-      <div class="section-head"><div><h2>خدمات المنصة</h2><p>ثلاث خدمات مترابطة: الفحص لصاحب المحل، والمساعد لأسئلته، واللوحة للأمانة.</p></div></div>
+      <div class="section-head"><div><h2>الخدمات الإلكترونية</h2><p>ثلاث خدمات مترابطة: الفحص لصاحب المحل، والمساعد لأسئلته، واللوحة للأمانة.</p></div></div>
       <div class="services">
         <a class="card svc-card" href="#check" data-go="check">
           <span class="svc-ico"><i data-i="scan" data-s="24"></i></span>
           <span class="svc-tag">لأصحاب المحلات</span>
           <h3>فحص جاهزية المحل</h3>
           <p>صوّر محلك واستلم تقرير جاهزية يوضح كل بند: مطابق، أو يحتاج تعديل، أو يحتاج مراجعة، مع الحل.</p>
-          <span class="more">ابدأ الخدمة <i data-i="arrowL" data-s="16"></i></span>
+          <div class="svc-meta"><span><i data-i="clock" data-s="15"></i>دقيقة تقريباً</span><span><i data-i="cash" data-s="15"></i>مجانية</span></div><span class="btn btn-primary btn-sm start">ابدأ الخدمة</span>
         </a>
         <a class="card svc-card" href="#ask" data-go="ask">
           <span class="svc-ico"><i data-i="chat" data-s="24"></i></span>
           <span class="svc-tag">لأصحاب المحلات</span>
           <h3>اسأل مُيسّر</h3>
           <p>مساعد يجيب عن اشتراطات نشاطك بالعربية والإنجليزية والأردو والإندونيسية والبنغالية، ويذكر المصدر.</p>
-          <span class="more">اسأل الآن <i data-i="arrowL" data-s="16"></i></span>
+          <div class="svc-meta"><span><i data-i="globe" data-s="15"></i>5 لغات</span><span><i data-i="cash" data-s="15"></i>مجانية</span></div><span class="btn btn-primary btn-sm start">ابدأ الخدمة</span>
         </a>
         <a class="card svc-card" href="#board" data-go="board">
           <span class="svc-ico"><i data-i="building" data-s="24"></i></span>
           <span class="svc-tag">للأمانة</span>
           <h3>لوحة مؤشرات الأمانة</h3>
           <p>متوسط الجاهزية، وأكثر الملاحظات تكراراً، وتوزيعها على الأحياء. بدون صور أو بيانات شخصية.</p>
-          <span class="more">افتح اللوحة <i data-i="arrowL" data-s="16"></i></span>
+          <div class="svc-meta"><span><i data-i="lock" data-s="15"></i>برمز دخول</span><span><i data-i="shield" data-s="15"></i>بدون بيانات شخصية</span></div><span class="btn btn-outline btn-sm start">افتح اللوحة</span>
         </a>
       </div>
     </div>
   </section>
 
-  <section class="section">
+  <section class="section alt">
     <div class="wrap">
       <div class="section-head"><div><h2>كيف تعمل الخدمة</h2><p>أربع خطوات من التصوير إلى التقديم.</p></div></div>
-      <ol class="howto card card-pad">
+      <ol class="howto">
         <li><span class="num">1</span><h3>اختر نشاطك</h3><p>مقهى، بقالة، مطعم، أو صالون حلاقة، ثم الحي.</p></li>
         <li><span class="num">2</span><h3>صوّر محلك</h3><p>الواجهة واللوحة إلزامية، والمدخل والداخل والمستند ترفع دقة الفحص.</p></li>
         <li><span class="num">3</span><h3>استلم تقرير الجاهزية</h3><p>نسبة جاهزية وحكم على كل بند وطريقة الإصلاح، بلغتك.</p></li>
@@ -583,6 +642,25 @@ tr:last-child td{border-bottom:0}
 
   <main class="main">
     <div class="wrap">
+      <section class="card svcinfo" aria-label="معلومات الخدمة">
+        <div class="tabs" role="tablist" id="infotabs">
+          <button type="button" role="tab" aria-pressed="true" data-p="p-desc">وصف الخدمة</button>
+          <button type="button" role="tab" aria-pressed="false" data-p="p-req">المتطلبات</button>
+          <button type="button" role="tab" aria-pressed="false" data-p="p-steps">خطوات الخدمة</button>
+        </div>
+        <div class="pane" id="p-desc"><p>خدمة تمكّن صاحب المحل من فحص جاهزية محله للاشتراطات البلدية قبل التقديم على الرخصة التجارية، عن طريق تصوير المحل. يطابق مُيسّر الصور مع اشتراطات النشاط، ويصدر تقرير جاهزية مبدئي بلغة المستفيد، يوضح حالة كل بند وطريقة الإصلاح.</p></div>
+        <div class="pane" id="p-req" hidden><ul>
+          <li><i data-i="check" data-s="16"></i>جوال أو جهاز فيه كاميرا.</li>
+          <li><i data-i="check" data-s="16"></i>صورة واضحة لواجهة المحل تظهر فيها اللوحة (إلزامية).</li>
+          <li><i data-i="check" data-s="16"></i>صور المدخل والداخل وعقد الإيجار أو السجل التجاري (اختيارية، وترفع دقة الفحص).</li>
+        </ul></div>
+        <div class="pane" id="p-steps" hidden><ol>
+          <li>اختيار نوع النشاط والحي.</li>
+          <li>تصوير المحل ورفع الصور.</li>
+          <li>استلام تقرير الجاهزية وإصلاح الملاحظات.</li>
+          <li>إعادة الفحص، ثم التقديم على منصة بلدي.</li>
+        </ol></div>
+      </section>
       <div class="svc-grid" id="svc">
         <section class="card" aria-label="خطوات الخدمة">
           <ol class="stepper" id="stepper">
@@ -730,6 +808,12 @@ tr:last-child td{border-bottom:0}
   </main>
 </div>
 
+<section class="rate" aria-label="تقييم الصفحة"><div class="wrap"><div class="rate-box" id="rate">
+  <b>هل استفدت من محتوى هذه الصفحة؟</b>
+  <div class="btns"><button class="btn btn-outline btn-sm" type="button" data-r="1">نعم</button><button class="btn btn-outline btn-sm" type="button" data-r="0">لا</button></div>
+  <span class="thanks" hidden><i data-i="check" data-s="18"></i>شكراً على تقييمك</span>
+</div></div></section>
+
 <footer class="footer">
   <div class="wrap">
     <div class="f-grid">
@@ -744,7 +828,7 @@ tr:last-child td{border-bottom:0}
       <div><h4>الدعم</h4><ul><li>الرقم الموحد للأمانة: 940</li><li><a href="https://balady.gov.sa" target="_blank" rel="noopener">منصة بلدي</a></li></ul></div>
       <div><h4>عن النسخة</h4><ul><li>نموذج أولي</li><li>هاكاثون الابتكار البلدي 2026</li><li>مسار تجربة المستفيد والخدمات الرقمية</li></ul></div>
     </div>
-    <div class="f-bottom"><span>النتيجة إرشادية، والحكم النهائي للجهة المختصة.</span><span>الاشتراطات في هذه النسخة تجريبية، وتُستبدل بدليل الاشتراطات الرسمي.</span></div>
+    <div class="f-bottom"><span>النتيجة إرشادية، والحكم النهائي للجهة المختصة. الاشتراطات في هذه النسخة تجريبية، وتُستبدل بدليل الاشتراطات الرسمي.</span><span class="copy"><span>© 2026 فريق مُيسّر</span><span>آخر تحديث: 9 أكتوبر 2026</span></span></div>
   </div>
 </footer>
 
@@ -1364,6 +1448,18 @@ async function initServer(){
   refresh(); setStatus();
 }
 if(window.claude && typeof window.claude.use==="function") initClaude(); else initServer();
+
+
+/* ---------- accessibility: font size ---------- */
+function setZoom(z){ document.body.style.zoom = z==1 ? "" : z; $$(".a11y button").forEach(b=>b.setAttribute("aria-pressed", String(+b.dataset.z===+z))); try{ localStorage.setItem("muyassir.zoom", z); }catch(e){} }
+$$(".a11y button").forEach(b=>b.addEventListener("click",()=>setZoom(b.dataset.z)));
+try{ const z = localStorage.getItem("muyassir.zoom"); if(z) setZoom(z); }catch(e){}
+/* ---------- service info tabs ---------- */
+$$("#infotabs button").forEach(b=>b.addEventListener("click",()=>{ $$("#infotabs button").forEach(x=>{ x.setAttribute("aria-pressed", String(x===b)); $("#"+x.dataset.p).hidden = x!==b; }); }));
+/* ---------- page rating (kept on this device only) ---------- */
+$$("#rate [data-r]").forEach(b=>b.addEventListener("click",()=>{ $("#rate .btns").hidden = true; $("#rate .thanks").hidden = false; }));
+/* ---------- key facts ---------- */
+(function(){ const codes = new Set(); Object.values(ACTS).forEach(a=>a.items.forEach(i=>codes.add(i.code))); $("#nItems").textContent = codes.size+" بند فحص"; $("#nActs").textContent = Object.keys(ACTS).length+" أنشطة"; })();
 
 /* start */
 window.addEventListener("hashchange",()=>{ const v=(location.hash||"").slice(1); if(VIEWS.includes(v) && v!==current) go(v); });

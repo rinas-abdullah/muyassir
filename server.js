@@ -20,7 +20,8 @@ const routes = {
   "/api/analyze": require("./api/analyze"),
   "/api/ask": require("./api/ask"),
   "/api/stats": require("./api/stats"),
-  "/api/health": require("./api/health")
+  "/api/health": require("./api/health"),
+  "/api/i18n": require("./api/i18n")
 };
 const PUBLIC = path.join(__dirname, "public");
 const TYPES = { ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".css": "text/css", ".svg": "image/svg+xml", ".png": "image/png", ".jpg": "image/jpeg", ".ico": "image/x-icon", ".json": "application/json" };

@@ -79,3 +79,56 @@ test("offline assistant answers from the knowledge base without an API key", () 
   assert.match(core.offlineAnswer("كم رسوم الرخصة؟"), /940/);
   assert.match(core.offlineAnswer("What should my café signboard look like?"), /signboard/);
 });
+
+test("the interface strings are keyed by Arabic and translated, never left as the key", () => {
+  const { I18N } = require("../lib/core");
+  assert.ok(I18N.KEYS.length > 300);
+  const en = I18N.dict.en;
+  assert.ok(I18N.KEYS.every(k => /[؀-ۿ]/.test(k)), "every key is the Arabic original");
+  assert.ok(I18N.KEYS.every(k => en[k] && en[k] !== k), "every key has a real English translation");
+  assert.ok(I18N.KEYS.every(k => k === k.replace(/\s+/g, " ").trim()), "keys are whitespace-normalised");
+});
+
+test("a sentence with values keeps the same placeholders in translation", () => {
+  const { I18N } = require("../lib/core");
+  const holes = s => (String(s).match(/\{\w+\}/g) || []).sort().join(",");
+  const bad = I18N.KEYS.filter(k => holes(k) !== holes(I18N.dict.en[k]));
+  assert.deepEqual(bad, []);
+});
+
+test("the interface is translated in chunks, merged, and then served from cache", async () => {
+  const realFetch = globalThis.fetch, realKey = process.env.ANTHROPIC_API_KEY;
+  process.env.ANTHROPIC_API_KEY = "test-key";
+  let calls = 0;
+  globalThis.fetch = async (url, opts) => {
+    calls++;
+    const prompt = JSON.parse(opts.body).messages[0].content;
+    const asked = JSON.parse(prompt.slice(prompt.lastIndexOf("\n") + 1));
+    const out = {};
+    for (const k of Object.keys(asked)) out[k] = "BN:" + k;      // a stand-in translation
+    return { ok: true, status: 200, json: async () => ({ content: [{ type: "text", text: JSON.stringify(out) }] }) };
+  };
+  try {
+    const strings = await core.translateUI("bn");
+    assert.ok(calls > 1, "long string tables are split across several calls");
+    assert.deepEqual(core.I18N.KEYS.filter(k => !strings[k]), [], "every string comes back translated");
+    const before = calls;
+    assert.deepEqual(await core.translateUI("bn"), strings);
+    assert.equal(calls, before, "the second request is served from cache");
+  } finally {
+    globalThis.fetch = realFetch;
+    if (realKey === undefined) delete process.env.ANTHROPIC_API_KEY; else process.env.ANTHROPIC_API_KEY = realKey;
+  }
+});
+
+test("a half-finished translation is refused rather than shown", async () => {
+  const realFetch = globalThis.fetch, realKey = process.env.ANTHROPIC_API_KEY;
+  process.env.ANTHROPIC_API_KEY = "test-key";
+  globalThis.fetch = async () => ({ ok: true, status: 200, json: async () => ({ content: [{ type: "text", text: "{}" }] }) });
+  try {
+    await assert.rejects(core.translateUI("ta"), e => e.code === "i18n_failed");
+  } finally {
+    globalThis.fetch = realFetch;
+    if (realKey === undefined) delete process.env.ANTHROPIC_API_KEY; else process.env.ANTHROPIC_API_KEY = realKey;
+  }
+});

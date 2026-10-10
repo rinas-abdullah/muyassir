@@ -1,7 +1,8 @@
 {
   "functions": {
     "api/analyze.js": { "maxDuration": 60 },
-    "api/ask.js": { "maxDuration": 30 }
+    "api/ask.js": { "maxDuration": 30 },
+    "api/i18n.js": { "maxDuration": 60 }
   },
   "headers": [
     {
@@ -9,7 +10,7 @@
       "headers": [
         { "key": "X-Content-Type-Options", "value": "nosniff" },
         { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
-        { "key": "Permissions-Policy", "value": "geolocation=(), microphone=()" }
+        { "key": "Permissions-Policy", "value": "geolocation=(), microphone=(self)" }
       ]
     }
   ]

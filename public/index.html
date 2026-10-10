@@ -569,6 +569,13 @@ tr:last-child td{border-bottom:0}
 .lp-list button{width:100%;border-radius:10px;display:flex;align-items:center;justify-content:space-between;gap:8px;text-align:start;font-weight:500}
 .lp-list button small{color:var(--subtle);font-size:12px}
 .lp-list button[aria-pressed="true"] small{color:#E2F1EC}
+.lp-pop button,.lp-list button{display:inline-flex;align-items:center;gap:7px}
+.vmark{display:inline-flex;color:var(--brand);opacity:.75;flex:none}
+.lp-list button .vmark{margin-inline-start:auto}
+button[aria-pressed="true"] .vmark{color:#FFFFFF;opacity:.9}
+.i18n-busy{position:fixed;inset-block-end:18px;inset-inline-start:50%;transform:translateX(-50%);z-index:70;background:var(--brand);color:#FFFFFF;border-radius:999px;padding:9px 18px;font-size:14px;font-weight:600;box-shadow:0 6px 24px rgba(10,40,34,.28);display:flex;align-items:center;gap:9px}
+.i18n-busy .sp{width:14px;height:14px;border:2px solid rgba(255,255,255,.4);border-top-color:#FFFFFF;border-radius:50%;animation:spin .7s linear infinite;flex:none}
+@keyframes spin{to{transform:rotate(360deg)}}
 @media (max-width:520px){.lp-list{grid-template-columns:1fr}.langbtn span{max-width:80px}}
 
 /* ===== voice / text mode ===== */
@@ -977,6 +984,7 @@ tr:last-child td{border-bottom:0}
 </div>
 
 <script src="kb.js"></script>
+<script src="i18n.js"></script>
 <script>
 (function(){
 "use strict";
@@ -1052,12 +1060,16 @@ $$("i[data-i]").forEach(el=>el.replaceWith(ico(el.dataset.i, +el.dataset.s || 20
 function scoreOf(results){ let t=0,s=0; results.forEach(r=>{ const w=W[r.sev]||2; t+=w; s+= r.status==="pass"?w : r.status==="needs_review"? w*.5 : 0; }); return t? Math.round(100*s/t) : 0; }
 function ringColor(score){ return score>=85 ? "var(--ok)" : score>=60 ? "var(--gold)" : "var(--bad)"; }
 function ring(score, label){
-  const r = h("div",{class:"ring", role:"img", "aria-label":"نسبة الجاهزية "+score+"٪"}, h("div",null, h("span",null, h("b",{text:score+"%"}), h("small",{text:label||"نسبة الجاهزية"}))));
+  const r = h("div",{class:"ring", role:"img", "aria-label":tf("نسبة الجاهزية {n}٪",{n:score})}, h("div",null, h("span",null, h("b",{text:score+"%"}), h("small",{text:label||"نسبة الجاهزية"}))));
   r.style.setProperty("--p", score); r.style.setProperty("--ring", ringColor(score));
   return r;
 }
-const fmtDate = new Intl.DateTimeFormat("ar-SA-u-nu-latn-ca-gregory",{year:"numeric", month:"long", day:"numeric"});
-const fmtShort = new Intl.DateTimeFormat("ar-SA-u-nu-latn-ca-gregory",{month:"short", day:"numeric", hour:"numeric", minute:"2-digit"});
+/* dates follow the interface language, with Latin digits and the Gregorian calendar everywhere */
+function dtf(opts){ const tag = (UILANG==="ar" ? "ar-SA" : UILANG) + "-u-nu-latn-ca-gregory"; try{ return new Intl.DateTimeFormat(tag, opts); }catch(e){ return new Intl.DateTimeFormat("en-GB-u-ca-gregory", opts); } }
+const fmtDate = d => dtf({year:"numeric", month:"long", day:"numeric"}).format(d);
+const fmtShort = d => dtf({month:"short", day:"numeric", hour:"numeric", minute:"2-digit"}).format(d);
+/* a date on the page carries its timestamp, so it can be re-formatted when the language changes */
+function dateEl(tag, ms, kind, attrs){ const el = h(tag, Object.assign({"data-date":String(ms), "data-fmt":kind||"long"}, attrs||{})); el.textContent = (kind==="short"?fmtShort:fmtDate)(new Date(ms)); return el; }
 function newNo(){ const d=new Date(); const p=n=>String(n).padStart(2,"0"); return "MYS-"+String(d.getFullYear()).slice(2)+p(d.getMonth()+1)+p(d.getDate())+"-"+String(Math.floor(1000+Math.random()*9000)); }
 
 /* ---------- language ---------- */
@@ -1077,14 +1089,135 @@ let autoLang = null;
   if(l && LANGS[l]) langSel.value = l;
 })();
 function syncLang(){ $("#factLang").textContent = LNAME[langSel.value]; $("#langName").textContent = LNAME[langSel.value]; }
-function setLang(code){ if(!LANGS[code]) return; langSel.value = code; try{ localStorage.setItem("muyassir.lang", code); }catch(e){} syncLang(); langSel.dispatchEvent(new Event("change")); }
+function setLang(code){ if(!LANGS[code]) return; langSel.value = code; try{ localStorage.setItem("muyassir.lang", code); }catch(e){} syncLang(); langSel.dispatchEvent(new Event("change")); useLang(code); }
 langSel.addEventListener("change", syncLang);
 syncLang();
+
+/* ================= interface language =================
+   Every visible string is keyed by its Arabic original, so the whole interface —
+   including anything rendered later — switches with the language the user picks. */
+const RTL_LANGS = new Set(["ar","ur","fa","ps","ku","sd","ug","he","yi"]);
+const I18N_ATTRS = ["placeholder","title","aria-label","alt","aria-placeholder","data-hint"];
+const I18N = window.MUYASSIR_I18N || {dict:{}, keys:[]};
+const SRCTXT = new WeakMap(), SRCATTR = new WeakMap();
+let UILANG = "ar", DICT = null, i18nBusyEl = null;
+
+/* the Arabic text itself is the key; whitespace in the markup must not change the lookup */
+function i18nKey(s){ return String(s).replace(/\s+/g, " ").trim(); }
+function t(s){ if(!DICT) return s; const v = DICT[i18nKey(s)]; return v == null ? s : v; }
+/* a sentence with values in it: the whole sentence is one key, so word order stays natural
+   in every language — tf("uploaded {n} of {all} photos", {n:2, all:4}).
+   The result is remembered so that text already on the page can be rebuilt when the language changes. */
+const COMPOSED = new Map();
+function tf(s, vals){
+  const out = t(s).replace(/\{(\w+)\}/g, (m, k)=>{
+    const x = vals[k];
+    return x == null ? m : (typeof x === "string" ? t(x) : x);
+  });
+  COMPOSED.set(out, {k:s, v:vals});
+  return out;
+}
+function trChunk(s){
+  const m = /^(\s*)([\s\S]*?)(\s*)$/.exec(s), core = i18nKey(m[2]);
+  if(!core) return s;
+  const c = COMPOSED.get(core);
+  if(c) return m[1] + tf(c.k, c.v) + m[3];
+  if(!DICT) return s;
+  const v = DICT[core];
+  return v == null ? s : m[1] + v + m[3];
+}
+function applyI18n(root){
+  root = root || document.body;
+  if(root.nodeType === 3){ const src = srcOf(root); const out = trChunk(src); if(root.nodeValue !== out) root.nodeValue = out; return; }
+  if(root.nodeType !== 1 && root.nodeType !== 11) return;
+  const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {acceptNode(n){
+    const p = n.parentNode, tag = p && p.nodeName;
+    if(tag === "SCRIPT" || tag === "STYLE" || tag === "OPTION") return NodeFilter.FILTER_REJECT;
+    return n.nodeValue && n.nodeValue.trim() ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+  }});
+  const texts = []; for(let n; (n = w.nextNode());) texts.push(n);
+  texts.forEach(n=>{ const out = trChunk(srcOf(n)); if(n.nodeValue !== out) n.nodeValue = out; });
+  const els = root.nodeType === 1 ? [root, ...root.querySelectorAll("*")] : [...root.querySelectorAll("*")];
+  els.forEach(el=>{
+    if(el.hasAttribute("data-date")){
+      const ms = +el.getAttribute("data-date");
+      if(ms) el.textContent = (el.getAttribute("data-fmt") === "short" ? fmtShort : fmtDate)(new Date(ms));
+    }
+    let store = SRCATTR.get(el);
+    I18N_ATTRS.forEach(a=>{
+      let src = store && store[a];
+      if(src === undefined){
+        if(!el.hasAttribute(a)) return;
+        src = el.getAttribute(a);
+        if(!store){ store = {}; SRCATTR.set(el, store); }
+        store[a] = src;
+      }
+      const out = trChunk(src);
+      if(el.getAttribute(a) !== out) el.setAttribute(a, out);
+    });
+  });
+}
+function srcOf(n){ let s = SRCTXT.get(n); if(s === undefined){ s = n.nodeValue; SRCTXT.set(n, s); } return s; }
+/* anything rendered after a language switch is translated as it enters the page */
+new MutationObserver(muts=>{
+  if(!DICT) return;
+  muts.forEach(m=>m.addedNodes.forEach(n=>{ if(n.nodeType === 1 || n.nodeType === 3) applyI18n(n); }));
+}).observe(document.body, {childList:true, subtree:true});
+
+function i18nBusy(on){
+  if(on){
+    if(!i18nBusyEl){
+      i18nBusyEl = h("div",{class:"i18n-busy", role:"status"}, h("span",{class:"sp"}), h("span",{id:"i18nBusyT", text:"جاري تجهيز اللغة…"}));
+      document.body.append(i18nBusyEl);
+    }
+    i18nBusyEl.hidden = false;
+  } else if(i18nBusyEl) i18nBusyEl.hidden = true;
+}
+function setDict(code, dict, textLang){
+  UILANG = code; DICT = dict;
+  /* textLang is the language actually on screen: it differs from code only when we fell back */
+  const dir = RTL_LANGS.has(textLang || code) ? "rtl" : "ltr";
+  document.documentElement.setAttribute("dir", dir);
+  document.documentElement.setAttribute("lang", code);
+  const rootDiv = document.querySelector("body > div[dir]");
+  if(rootDiv){ rootDiv.setAttribute("dir", dir); rootDiv.setAttribute("lang", code); }
+  applyI18n(document.body);
+  syncLang(); syncVoiceNotice();
+}
+function cacheKey(code){ return "muyassir.ui." + code; }
+async function useLang(code){
+  if(code === UILANG) return;
+  if(code === "ar"){ setDict("ar", null); return; }
+  const built = I18N.dict && I18N.dict[code];
+  if(built){ setDict(code, built); return; }
+  let cached = null;
+  try{ const raw = localStorage.getItem(cacheKey(code)); if(raw) cached = JSON.parse(raw); }catch(e){}
+  if(cached){ setDict(code, cached); return; }
+  i18nBusy(true);
+  try{
+    const r = await fetch("/api/i18n", {method:"POST", headers:{"content-type":"application/json"}, body: JSON.stringify({lang: code})});
+    if(!r.ok) throw new Error("i18n " + r.status);
+    const data = await r.json();
+    if(!data || !data.strings) throw new Error("empty");
+    try{ localStorage.setItem(cacheKey(code), JSON.stringify(data.strings)); }catch(e){}
+    setDict(code, data.strings);
+  }catch(e){
+    /* fall back to English so the person is never stuck on a language they cannot read */
+    const en = I18N.dict && I18N.dict.en;
+    if(en && code !== "en") setDict(code, en, "en"); else setDict(code, null, "ar");
+  } finally { i18nBusy(false); }
+}
 /* picker */
 const lp = $("#lp");
 function langButton(code, withHint){
   const v = LANGS[code];
-  const b = h("button",{type:"button", "aria-pressed": String(langSel.value===code), lang:code, onclick:()=>{ setLang(code); closeLP(); }}, h("span",{text:v.native}), withHint && v.native!==AR_NAME[code] ? h("small",{text:AR_NAME[code]||v.name}) : null);
+  const spoken = hasVoice(code);
+  const b = h("button",{type:"button", "aria-pressed": String(langSel.value===code), lang:code,
+      title: spoken ? "جهازك ينطق هذه اللغة" : "جهازك ما ينطق هذه اللغة: الرد مكتوب فقط",
+      onclick:()=>{ setLang(code); closeLP(); }},
+    h("span",{text:v.native}),
+    withHint && v.native!==AR_NAME[code] ? h("small",{text:AR_NAME[code]||v.name}) : null,
+    spoken ? h("span",{class:"vmark", "aria-label":"مدعومة بالصوت"}, ico("volume",13)) : null);
   return b;
 }
 function renderLP(q){
@@ -1098,7 +1231,7 @@ function renderLP(q){
 }
 let lpReturn = null;
 function openLP(){ lpReturn = document.activeElement; $("#lpQ").value = ""; renderLP(""); 
-  const a=$("#lpAuto"); if(autoLang && autoLang===langSel.value){ a.textContent = "اخترنا لك لغة جهازك تلقائياً: "+LNAME[autoLang]+". تقدر تغيّرها من هنا."; a.hidden=false; } else a.hidden=true;
+  const a=$("#lpAuto"); if(autoLang && autoLang===langSel.value){ a.textContent = tf("اخترنا لك لغة جهازك تلقائياً: {lang}. تقدر تغيّرها من هنا.",{lang:LNAME[autoLang]}); a.hidden=false; } else a.hidden=true;
   lp.hidden = false; setTimeout(()=>$("#lpQ").focus(),30); }
 function closeLP(){ lp.hidden = true; if(lpReturn && lpReturn.focus) lpReturn.focus(); }
 $("#langBtn").addEventListener("click", openLP);
@@ -1152,7 +1285,7 @@ const EXAMPLE = (function(){
 (function homePreview(){
   const r = EXAMPLE, el = $("#preview"); if(!el) return;
   const c = {pass:0,fail:0,needs_review:0}; r.results.forEach(x=>c[x.status]++);
-  el.append(h("div",{class:"mini-score"}, ring(r.score), h("div",null, h("h4",{text:"قريب من الجاهزية"}), h("p",{text:c.fail+" بنود تحتاج تعديل، و"+c.needs_review+" تحتاج مراجعة"}))));
+  el.append(h("div",{class:"mini-score"}, ring(r.score), h("div",null, h("h4",{text:"قريب من الجاهزية"}), h("p",{text:tf("{a} بنود تحتاج تعديل، و{b} تحتاج مراجعة",{a:c.fail,b:c.needs_review})}))));
   r.results.filter(x=>x.status!=="pass").slice(0,3).concat(r.results.filter(x=>x.status==="pass").slice(0,1)).forEach(x=>{
     el.append(h("div",{class:"mini-item","data-s":x.status}, h("span",{class:"sti"}, ico(ST[x.status].i,15)), h("div",null, h("b",{text:x.t}), h("span",{text: x.fix || x.observation}))));
   });
@@ -1161,7 +1294,7 @@ const EXAMPLE = (function(){
 /* home: activities */
 Object.entries(ACTS).forEach(([id,a])=>{
   $("#homeActs").append(h("a",{class:"card act-link", href:"#check", "data-go":"check", "data-act":id},
-    h("span",{class:"svc-ico"}, ico(ACT_ICON[id],22)), h("span",null, h("b",{text:a.name}), h("small",{text:a.items.length+" بنود فحص"}))));
+    h("span",{class:"svc-ico"}, ico(ACT_ICON[id],22)), h("span",null, h("b",{text:a.name}), h("small",{text:tf("{n} بنود فحص",{n:a.items.length})}))));
 });
 
 /* ---------- check wizard ---------- */
@@ -1177,7 +1310,7 @@ function setStep(n){
 $("#district").append(...DISTRICTS.map(d=>h("option",{text:d})));
 Object.entries(ACTS).forEach(([id,a])=>{
   $("#actgrid").append(h("button",{type:"button", class:"actcard", role:"radio", "aria-checked":"false", "data-id":id, onclick:()=>chooseAct(id)},
-    h("span",{class:"ai"}, ico(ACT_ICON[id],26)), h("b",{text:a.name}), h("small",{text:a.items.length+" بنود فحص"})));
+    h("span",{class:"ai"}, ico(ACT_ICON[id],26)), h("b",{text:a.name}), h("small",{text:tf("{n} بنود فحص",{n:a.items.length})})));
 });
 function chooseAct(id){
   wz.act = id;
@@ -1193,7 +1326,7 @@ function renderChecklist(){
     const its = items.filter(i=>i.slot===s.id); if(!its.length) return;
     const sent = !!wz.photos[s.id];
     box.append(h("div",{class:"cl-group"},
-      h("h4",null, ico(SLOT_ICON[s.id],15), "صورة "+s.name, sent ? h("span",{class:"pill pass", text:"مرفوعة", style:"margin-inline-start:auto"}) : null),
+      h("h4",null, ico(SLOT_ICON[s.id],15), tf("صورة {slot}",{slot:s.name}), sent ? h("span",{class:"pill pass", text:"مرفوعة", style:"margin-inline-start:auto"}) : null),
       h("ul",{style:"display:grid;gap:6px"}, its.map(i=>h("li",null, h("i",{class:"sev "+i.sev, title:SEV[i.sev]}), h("span",{text:i.t}))))));
   });
 }
@@ -1203,7 +1336,7 @@ $("#back2").addEventListener("click",()=>setStep(1));
 function drawSlot(s){
   const el = document.getElementById("slot-"+s.id);
   el.innerHTML = ""; el.classList.toggle("has", !!wz.photos[s.id]);
-  const input = h("input",{type:"file", id:"file-"+s.id, accept:"image/jpeg,image/png,image/webp", "aria-label":"ارفع صورة: "+s.name});
+  const input = h("input",{type:"file", id:"file-"+s.id, accept:"image/jpeg,image/png,image/webp", "aria-label":tf("ارفع صورة: {slot}",{slot:s.name})});
   input.addEventListener("change",()=>{
     const f = input.files && input.files[0]; if(!f) return;
     if(wz.photos[s.id]) URL.revokeObjectURL(wz.photos[s.id].url);
@@ -1211,7 +1344,7 @@ function drawSlot(s){
     drawSlot(s); renderChecklist(); refresh();
   });
   if(wz.photos[s.id]){
-    el.append(h("img",{src:wz.photos[s.id].url, alt:"صورة "+s.name}), input,
+    el.append(h("img",{src:wz.photos[s.id].url, alt:tf("صورة {slot}",{slot:s.name})}), input,
       h("div",{class:"cap"}, h("span",{class:"ok"}, ico("check",14), s.name),
         h("button",{type:"button", class:"x", onclick:e=>{ e.preventDefault(); URL.revokeObjectURL(wz.photos[s.id].url); delete wz.photos[s.id]; drawSlot(s); renderChecklist(); refresh(); }}, "حذف")));
   } else {
@@ -1223,11 +1356,11 @@ SLOTS.forEach(s=>{ $("#slots").append(h("label",{class:"slot", id:"slot-"+s.id})
 
 function refresh(){
   $("#next1").disabled = !wz.act;
-  $("#hint1").textContent = wz.act ? ACTS[wz.act].items.length+" بنود تنتظر الفحص لنشاط "+ACTS[wz.act].name+"." : "اختر نوع النشاط للمتابعة.";
+  $("#hint1").textContent = wz.act ? tf("{n} بنود تنتظر الفحص لنشاط {act}.",{n:ACTS[wz.act].items.length,act:ACTS[wz.act].name}) : "اختر نوع النشاط للمتابعة.";
   const n = Object.keys(wz.photos).length;
   $("#run").disabled = !(wz.act && wz.photos.facade && backend.ready);
   $("#runhint").textContent = !backend.ready ? backend.msg :
-    !wz.photos.facade ? "ارفع صورة الواجهة واللوحة للمتابعة." : "رفعت "+n+" من "+SLOTS.length+" صور. جاهز للفحص.";
+    !wz.photos.facade ? "ارفع صورة الواجهة واللوحة للمتابعة." : tf("رفعت {n} من {all} صور. جاهز للفحص.",{n:n,all:SLOTS.length});
   const mb = $("#modeBanner");
   if(backend.mock){ mb.hidden=false; mb.textContent="وضع تجريبي: الخادم يعمل بدون مفتاح الذكاء الاصطناعي، فالنتائج نموذجية وليست فحصاً حقيقياً."; }
   else mb.hidden = true;
@@ -1240,13 +1373,13 @@ function renderReport(r){
   const verdict = c.fail===0 && c.needs_review===0 ? "جاهز للتقديم" : c.fail===0 ? "جاهز مبدئياً، مع بنود تحتاج صوراً أوضح" : r.score>=60 ? "قريب من الجاهزية" : "يحتاج تعديلات قبل التقديم";
   const head = h("div",{class:"doc-head"},
     h("div",{class:"t"}, h("span",{class:"svc-ico"}, ico("file",22)), h("div",null, h("h2",{text:"تقرير جاهزية مبدئي"}), h("span",{class:"sub", text:"صادر من منصة مُيسّر"}))),
-    h("div",{class:"doc-no"}, h("span",{text:"رقم التقرير"}), h("b",{text:r.no||"—", dir:"ltr"}), h("span",{text:fmtDate.format(new Date(r.at||Date.now()))})));
+    h("div",{class:"doc-no"}, h("span",{text:"رقم التقرير"}), h("b",{text:r.no||"—", dir:"ltr"}), dateEl("span", r.at||Date.now(), "long")));
   const body = h("div",{class:"doc-body"});
   if(r.example || r.mock) body.append(h("span",{class:"tag", style:"justify-self:start"}, ico("info",14), r.example ? "مثال توضيحي، وليس نتيجة فحص حقيقي" : "وضع تجريبي: النتيجة نموذجية بدون ذكاء اصطناعي"));
   body.append(h("dl",{class:"meta"},
     h("div",null, h("dt",{text:"النشاط"}), h("dd",{text:ACTS[r.act].name})),
     h("div",null, h("dt",{text:"الحي"}), h("dd",{text:r.district})),
-    h("div",null, h("dt",{text:"المساحة"}), h("dd",{text: r.area ? r.area+" م²" : "غير محددة"})),
+    h("div",null, h("dt",{text:"المساحة"}), h("dd",{text: r.area ? tf("{n} م²",{n:r.area}) : "غير محددة"})),
     h("div",null, h("dt",{text:"لغة التقرير"}), h("dd",{text:LNAME[r.lang]||"العربية"}))));
   body.append(h("div",{class:"scorebox"}, ring(r.score),
     h("div",{class:"verdict"}, h("h3",{text:verdict}), r.summary ? h("p",{dir:"auto", text:r.summary}) : null,
@@ -1267,7 +1400,7 @@ function renderReport(r){
         h("div",{class:"it-top"}, h("h3",{text:x.t}), h("span",{class:"pill "+x.status, text:ST[x.status].w})),
         x.observation ? h("p",{class:"obs", dir:"auto", text:x.observation}) : null,
         x.fix && x.status!=="pass" ? h("p",{class:"fix", dir:"auto"}, h("b",{text:"الحل: "}), x.fix) : null,
-        h("p",{class:"imeta", text:"البند "+x.code+" · "+SEV[x.sev]+" · صورة "+slotName(x.slot)})));
+        h("p",{class:"imeta", text:tf("البند {code} · {sev} · صورة {slot}",{code:x.code,sev:SEV[x.sev],slot:slotName(x.slot)})})));
     });
   if(!list.children.length) list.append(h("p",{class:"empty-mini", text:"لا توجد بنود في هذا التصنيف."}));
   body.append(list);
@@ -1293,7 +1426,7 @@ function resetWizard(){
   SLOTS.forEach(drawSlot); filter="all"; renderChecklist(); setStep(1);
 }
 function showExample(){ filter="all"; chooseAct("cafe"); renderReport(EXAMPLE); setStep(3); }
-function spokenSummary(r){ let s=(r.summary||"")+" "; r.results.filter(x=>x.status==="fail").forEach(x=>{ s+=(x.observation||"")+" "+(x.fix||"")+" "; }); return s.trim() || ("نسبة الجاهزية "+r.score); }
+function spokenSummary(r){ let s=(r.summary||"")+" "; r.results.filter(x=>x.status==="fail").forEach(x=>{ s+=(x.observation||"")+" "+(x.fix||"")+" "; }); return s.trim() || tf("نسبة الجاهزية {n}",{n:r.score}); }
 function textReport(r){
   let t = "تقرير جاهزية مبدئي من مُيسّر\nرقم التقرير: "+(r.no||"")+"\nالنشاط: "+ACTS[r.act].name+" · الحي: "+r.district+"\nنسبة الجاهزية: "+r.score+"%\n";
   if(r.summary) t += r.summary+"\n";
@@ -1302,19 +1435,42 @@ function textReport(r){
 }
 /* ---------- text to speech (robust across Chrome, Edge, Safari, iOS, Android) ---------- */
 const TTS = "speechSynthesis" in window;
-let voicesP = null, ttsUnlocked = false, speakingNow = false;
+let voicesP = null, ttsUnlocked = false, speakingNow = false, voicesNow = [];
+/* Some engines label a language with an older or alternative code than the one we use. */
+const VOICE_ALIAS = {tl:["fil","tl"], id:["id","in"], he:["he","iw"], zh:["zh","cmn","yue"], nb:["nb","no"], ku:["ku","ckb"], ps:["ps","pbt"], my:["my","mya"], pa:["pa","pnb"]};
+function voiceCodes(code){ return VOICE_ALIAS[code] || [code]; }
 function loadVoices(){
   if(!TTS) return Promise.resolve([]);
-  const v = speechSynthesis.getVoices(); if(v.length) return Promise.resolve(v);
-  if(!voicesP) voicesP = new Promise(res=>{ const done=()=>res(speechSynthesis.getVoices()); try{ speechSynthesis.addEventListener("voiceschanged", done, {once:true}); }catch(e){} setTimeout(done, 1500); });
+  const v = speechSynthesis.getVoices(); if(v.length){ voicesNow = v; return Promise.resolve(v); }
+  if(!voicesP) voicesP = new Promise(res=>{ const done=()=>{ voicesNow = speechSynthesis.getVoices(); res(voicesNow); }; try{ speechSynthesis.addEventListener("voiceschanged", done, {once:true}); }catch(e){} setTimeout(done, 1500); });
   return voicesP;
 }
-if(TTS) loadVoices();
-function pickVoice(voices, tag){
-  const norm = x=>String(x||"").toLowerCase().replace("_","-"), base = tag.slice(0,2).toLowerCase();
-  const c = voices.filter(v=>norm(v.lang).startsWith(base)); if(!c.length) return null;
-  const score = v=>(/natural|neural|online|premium|enhanced|google|siri|majed|maged|tarik|laila|hamed|zariyah|salma/i.test(v.name)?2:0)+(norm(v.lang)===tag.toLowerCase()?1:0);
+/* keep the list fresh: Chrome and Android fill it in late, and it can change while the page is open */
+if(TTS){ loadVoices().then(markVoiceSupport); try{ speechSynthesis.addEventListener("voiceschanged", ()=>{ voicesNow = speechSynthesis.getVoices(); markVoiceSupport(); }); }catch(e){} }
+function pickVoice(voices, code){
+  const norm = x=>String(x||"").toLowerCase().replace(/_/g,"-");
+  const bases = voiceCodes(code), tag = norm((LANGS[code]||LANGS.ar).v);
+  const c = voices.filter(v=>{ const l = norm(v.lang); return bases.some(b=>l===b || l.startsWith(b+"-")); });
+  if(!c.length) return null;
+  const score = v=>(/natural|neural|online|premium|enhanced|google|siri|majed|maged|tarik|laila|hamed|zariyah|salma/i.test(v.name)?2:0)+(norm(v.lang)===tag?3:0)+(v.localService?1:0);
   return c.sort((a,b)=>score(b)-score(a))[0];
+}
+/* which languages this device can actually pronounce */
+const voiceOK = {};
+function markVoiceSupport(){
+  Object.keys(LANGS).forEach(c=>{ voiceOK[c] = !!pickVoice(voicesNow, c); });
+  if(!lp.hidden) renderLP($("#lpQ").value);
+  syncVoiceNotice();
+}
+function hasVoice(code){ return !!voiceOK[code]; }
+/* tell the user plainly when their device has no voice for the language they picked */
+function syncVoiceNotice(){
+  const n = $("#voiceHint"); if(!n) return;
+  const code = langSel.value;
+  if(!TTS){ n.hidden = false; n.textContent = t("متصفحك ما يدعم القراءة الصوتية. الردود تظهر مكتوبة."); return; }
+  if(!voicesNow.length || hasVoice(code)){ n.hidden = true; return; }
+  n.hidden = false;
+  n.textContent = tf("جهازك ما فيه صوت لـ{lang}. الرد يوصلك مكتوباً، وتقدر تضيف الصوت من إعدادات اللغة في جهازك.", {lang: " " + (LNAME[code]||"")});
 }
 function cleanForSpeech(t){ return String(t||"").replace(/https?:\/\/\S+/g,"").replace(/[*_#`>|~]/g," ").replace(/\s*\n+\s*/g,". ").replace(/\s{2,}/g," ").trim(); }
 function speechChunks(t){
@@ -1327,20 +1483,21 @@ function unlockTTS(){ if(!TTS || ttsUnlocked) return; try{ const u=new SpeechSyn
 function stopSpeaking(){ if(TTS){ try{ speechSynthesis.cancel(); }catch(e){} } setSpeaking(false); }
 async function speak(text, lang){
   if(!TTS) return false;
-  const tag = (LANGS[lang]||LANGS.ar).v;
-  const voice = pickVoice(await loadVoices(), tag);
+  const voices = await loadVoices();
+  const voice = pickVoice(voices, lang);
+  syncVoiceNotice();
+  /* no voice for this language on this device: a wrong-language voice reads it as gibberish, so stay quiet */
+  if(!voice) return false;
   try{ speechSynthesis.cancel(); }catch(e){}
   await new Promise(r=>setTimeout(r, 80));
   const parts = speechChunks(cleanForSpeech(text)); if(!parts.length) return false;
   setSpeaking(true);
   parts.forEach((p,i)=>{
-    const u = new SpeechSynthesisUtterance(p); u.lang = tag; if(voice) u.voice = voice; u.rate = 0.97;
+    const u = new SpeechSynthesisUtterance(p); u.voice = voice; u.lang = voice.lang; u.rate = 0.97;
     if(i===parts.length-1){ u.onend = ()=>setSpeaking(false); u.onerror = ()=>setSpeaking(false); }
     speechSynthesis.speak(u);
   });
   try{ speechSynthesis.resume(); }catch(e){}
-  const hint = $("#voiceHint");
-  if(hint){ hint.hidden = !!voice; if(!voice) hint.textContent = "جهازك ما فيه صوت للغة "+(LNAME[lang]||"")+"، فممكن يطلع الصوت بنطق غير واضح. تقدر تقرأ الرد المكتوب."; }
   return true;
 }
 
@@ -1489,7 +1646,7 @@ function renderBoard(){
   const kpis = [
     ["scan","عدد الفحوصات", n, "منذ بداية التشغيل"],
     ["chart","متوسط الجاهزية", avg+"%", "لكل الفحوصات"],
-    ["check","جاهز بدون تعديل", Math.round(100*ready/n)+"%", ready+" من "+n+" محل"],
+    ["check","جاهز بدون تعديل", Math.round(100*ready/n)+"%", tf("{a} من {b} محل",{a:ready,b:n})],
     ["chat","أسئلة للمساعد", qs==null ? "—" : qs, qs==null ? "لكل الأنشطة فقط" : "بكل اللغات"]
   ];
   el.append(h("div",{class:"kpis"}, kpis.map(([i,l,v,s])=>h("div",{class:"card kpi"}, h("div",{class:"kh"}, h("span",{text:l}), h("span",{class:"ki"}, ico(i,18))), h("b",{text:v}), h("small",{text:s})))));
@@ -1501,7 +1658,7 @@ function renderBoard(){
   const g = checks.filter(c=>c.score>=85).length, m = checks.filter(c=>c.score>=60 && c.score<85).length, r = n-g-m;
   const dist = h("div",{class:"dist", role:"img", "aria-label":"توزيع مستوى الجاهزية"});
   [["g",g],["m",m],["r",r]].forEach(([k,v])=>{ if(v){ const s=h("span",{class:k}); s.style.width=(100*v/n)+"%"; dist.append(s);} });
-  const p2 = h("section",{class:"card panel"}, h("div",{class:"panel-h"}, h("h3",{text:"مستوى الجاهزية"}), h("small",{text:n+" فحص"})), dist,
+  const p2 = h("section",{class:"card panel"}, h("div",{class:"panel-h"}, h("h3",{text:"مستوى الجاهزية"}), h("small",{text:tf("{n} فحص",{n:n})})), dist,
     h("ul",{class:"dist-l"}, [["var(--ok)","جاهز (85% فأكثر)",g],["var(--gold)","قريب (60 إلى 84%)",m],["var(--bad)","يحتاج عمل (أقل من 60%)",r]].map(([c,l,v])=>{
       const i = h("i"); i.style.background = c; return h("li",null, h("span",null, i, l), h("b",{text:v}));
     })));
@@ -1515,7 +1672,7 @@ function renderBoard(){
   const tb = h("table",null, h("thead",null, h("tr",null, ["الوقت","النشاط","الحي","اللغة","الجاهزية","يحتاج تعديل"].map(t=>h("th",{text:t})))), h("tbody"));
   checks.slice().sort((a,b)=>b.at-a.at).slice(0,10).forEach(c=>{
     const st = c.score>=85 ? "pass" : c.score>=60 ? "needs_review" : "fail";
-    tb.tBodies[0].append(h("tr",null, h("td",{class:"num", text:fmtShort.format(new Date(c.at))}), h("td",{text:(ACTS[c.act]||{}).name||c.act}), h("td",{text:c.district}), h("td",{text:LNAME[c.lang]||c.lang}),
+    tb.tBodies[0].append(h("tr",null, dateEl("td", c.at, "short", {class:"num"}), h("td",{text:(ACTS[c.act]||{}).name||c.act}), h("td",{text:c.district}), h("td",{text:LNAME[c.lang]||c.lang}),
       h("td",null, h("span",{class:"pill "+st, text:c.score+"%"})), h("td",{class:"num", text:(c.fail||[]).length})));
   });
   el.append(h("section",{class:"card panel", style:"margin-top:16px"}, h("div",{class:"panel-h"}, h("h3",{text:"آخر الفحوصات"})), h("div",{class:"tbl"}, tb)));
@@ -1670,7 +1827,7 @@ $$("#infotabs button").forEach(b=>b.addEventListener("click",()=>{ $$("#infotabs
 /* ---------- page rating (kept on this device only) ---------- */
 $$("#rate [data-r]").forEach(b=>b.addEventListener("click",()=>{ $("#rate .btns").hidden = true; $("#rate .thanks").hidden = false; }));
 /* ---------- key facts ---------- */
-(function(){ const codes = new Set(); Object.values(ACTS).forEach(a=>a.items.forEach(i=>codes.add(i.code))); $("#nItems").textContent = codes.size+" بند فحص"; $("#nActs").textContent = Object.keys(ACTS).length+" أنشطة"; })();
+(function(){ const codes = new Set(); Object.values(ACTS).forEach(a=>a.items.forEach(i=>codes.add(i.code))); $("#nItems").textContent = tf("{n} بند فحص",{n:codes.size}); $("#nActs").textContent = tf("{n} أنشطة",{n:Object.keys(ACTS).length}); })();
 
 
 /* ---------- voice: talk to the assistant and hear the answer ---------- */
@@ -1716,6 +1873,7 @@ window.addEventListener("hashchange",()=>{ const v=(location.hash||"").slice(1);
 setStep(1);
 go((location.hash||"").slice(1) || "home", {keepScroll:true});
 syncFab();
+useLang(langSel.value);
 })();
 </script>
 

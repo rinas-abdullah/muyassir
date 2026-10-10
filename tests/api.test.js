@@ -59,3 +59,31 @@ test("the site serves the app and blocks path traversal", async () => {
   assert.match(html, /kb\.js/);
   assert.notEqual((await fetch(base + "/../server.js")).status, 200);
 });
+
+test("the interface language service returns English without calling the model", async () => {
+  const res = await post("/api/i18n", { lang: "en" });
+  assert.equal(res.status, 200);
+  const { lang, strings } = await res.json();
+  assert.equal(lang, "en");
+  const { I18N } = require("../lib/core");
+  assert.equal(Object.keys(strings).length, I18N.KEYS.length);
+  assert.equal(strings[I18N.KEYS[0]], I18N.dict.en[I18N.KEYS[0]]);
+});
+
+test("the interface language service refuses an unknown language", async () => {
+  const res = await post("/api/i18n", { lang: "zz" });
+  assert.equal(res.status, 400);
+  assert.equal((await res.json()).error, "bad_lang");
+});
+
+test("without an API key the interface cannot be translated into a new language", async () => {
+  const res = await post("/api/i18n", { lang: "bn" });   // tests run in mock mode
+  assert.equal(res.status, 503);
+  assert.equal((await res.json()).error, "no_key");
+});
+
+test("every string the interface shows has an English translation", () => {
+  const { I18N } = require("../lib/core");
+  const missing = I18N.KEYS.filter(k => !I18N.dict.en[k]);
+  assert.deepEqual(missing, [], "run: node tools/extract-i18n.js");
+});

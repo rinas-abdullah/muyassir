@@ -77,13 +77,18 @@ test("the interface language service refuses an unknown language", async () => {
 });
 
 test("without an API key the interface cannot be translated into a new language", async () => {
-  const res = await post("/api/i18n", { lang: "bn" });   // tests run in mock mode
+  const { KB, I18N } = require("../lib/core");
+  const lang = Object.keys(KB.LANGS).find(l => l !== "ar" && !I18N.dict[l]);
+  const res = await post("/api/i18n", { lang });        // tests run in mock mode
   assert.equal(res.status, 503);
   assert.equal((await res.json()).error, "no_key");
 });
 
-test("every string the interface shows has an English translation", () => {
+test("every language that ships with the app covers every string", () => {
   const { I18N } = require("../lib/core");
-  const missing = I18N.KEYS.filter(k => !I18N.dict.en[k]);
-  assert.deepEqual(missing, [], "run: node tools/extract-i18n.js");
+  assert.ok(I18N.dict.en, "English always ships");
+  for (const lang of Object.keys(I18N.dict)) {
+    const missing = I18N.KEYS.filter(k => !I18N.dict[lang][k]);
+    assert.deepEqual(missing, [], lang + " is incomplete — run: node tools/extract-i18n.js");
+  }
 });

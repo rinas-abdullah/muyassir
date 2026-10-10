@@ -1120,7 +1120,9 @@ function applyI18n(root){
   if(root.nodeType !== 1 && root.nodeType !== 11) return;
   const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {acceptNode(n){
     const p = n.parentNode, tag = p && p.nodeName;
-    if(tag === "SCRIPT" || tag === "STYLE" || tag === "OPTION") return NodeFilter.FILTER_REJECT;
+    if(tag === "SCRIPT" || tag === "STYLE") return NodeFilter.FILTER_REJECT;
+    /* the language picker lists each language in its own script: leave those names alone */
+    if(p.closest && p.closest("#lang")) return NodeFilter.FILTER_REJECT;
     return n.nodeValue && n.nodeValue.trim() ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
   }});
   const texts = []; for(let n; (n = w.nextNode());) texts.push(n);
